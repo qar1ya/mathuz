@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Bot, Calendar, PlayCircle, BarChart2,
   BookOpen, Zap, FileText, Bookmark, Sun, Crown,
-  Settings, ChevronDown, ShieldCheck,
+  Settings, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -110,10 +110,7 @@ export default function Sidebar() {
           <Sun size={15} />
           <span>Yorug&apos; rejim</span>
         </button>
-        <Link href="/admin" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-dark-hover hover:text-white transition-colors">
-          <ShieldCheck size={15} />
-          <span className="flex-1">Admin Panel</span>
-        </Link>
+
         <Link href="/premium" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-dark-hover hover:text-white transition-colors">
           <Crown size={15} />
           <span className="flex-1">Premium Olish</span>
