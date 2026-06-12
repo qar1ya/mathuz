@@ -20,9 +20,10 @@ export default function MasalalarPage() {
   const [picked, setPicked] = useState<string | null>(null);
 
   useEffect(() => {
-    const qs = getAllQuestions();
-    setAllQuestions(qs);
-    if (qs.length > 0) setActiveId(qs[0].id);
+    getAllQuestions().then((qs) => {
+      setAllQuestions(qs);
+      if (qs.length > 0) setActiveId(qs[0].id);
+    });
   }, []);
 
   const filtered = allQuestions.filter((q) => {

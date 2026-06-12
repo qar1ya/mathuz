@@ -1,59 +1,63 @@
+import { supabase } from "./supabase";
 import { SAMPLE_QUESTIONS, SAMPLE_LESSONS } from "./sample-data";
 import type { Question, Lesson } from "./types";
 
-const QS_KEY = "mathuz_questions";
-const LS_KEY = "mathuz_lessons";
-
-export function getAllQuestions(): Question[] {
-  if (typeof window === "undefined") return SAMPLE_QUESTIONS;
-  const raw = localStorage.getItem(QS_KEY);
-  const custom: Question[] = raw ? JSON.parse(raw) : [];
-  return [...SAMPLE_QUESTIONS, ...custom];
+export async function getAllQuestions(): Promise<Question[]> {
+  const { data, error } = await supabase.from("questions").select("*");
+  if (error || !data || data.length === 0) return SAMPLE_QUESTIONS;
+  return data.map((q) => ({
+    id: q.id,
+    text: q.text,
+    options: q.options,
+    answer: q.answer,
+    solution: q.solution,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    examType: q.exam_type,
+  }));
 }
 
-export function getCustomQuestions(): Question[] {
-  if (typeof window === "undefined") return [];
-  const raw = localStorage.getItem(QS_KEY);
-  return raw ? JSON.parse(raw) : [];
+export async function saveQuestion(q: Question): Promise<void> {
+  await supabase.from("questions").upsert({
+    id: q.id,
+    text: q.text,
+    options: q.options,
+    answer: q.answer,
+    solution: q.solution ?? null,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    exam_type: q.examType,
+  });
 }
 
-export function saveQuestion(q: Question): void {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(QS_KEY);
-  const custom: Question[] = raw ? JSON.parse(raw) : [];
-  const idx = custom.findIndex((x) => x.id === q.id);
-  if (idx >= 0) custom[idx] = q;
-  else custom.push(q);
-  localStorage.setItem(QS_KEY, JSON.stringify(custom));
+export async function deleteQuestion(id: string): Promise<void> {
+  await supabase.from("questions").delete().eq("id", id);
 }
 
-export function deleteQuestion(id: string): void {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(QS_KEY);
-  const custom: Question[] = raw ? JSON.parse(raw) : [];
-  localStorage.setItem(QS_KEY, JSON.stringify(custom.filter((q) => q.id !== id)));
+export async function getAllLessons(): Promise<Lesson[]> {
+  const { data, error } = await supabase.from("lessons").select("*");
+  if (error || !data || data.length === 0) return SAMPLE_LESSONS;
+  return data.map((l) => ({
+    id: l.id,
+    title: l.title,
+    topic: l.topic,
+    duration: l.duration,
+    description: l.description,
+    isPremium: l.is_premium,
+  }));
 }
 
-export function getAllLessons(): Lesson[] {
-  if (typeof window === "undefined") return SAMPLE_LESSONS;
-  const raw = localStorage.getItem(LS_KEY);
-  const custom: Lesson[] = raw ? JSON.parse(raw) : [];
-  return [...SAMPLE_LESSONS, ...custom];
+export async function saveLesson(l: Lesson): Promise<void> {
+  await supabase.from("lessons").upsert({
+    id: l.id,
+    title: l.title,
+    topic: l.topic,
+    duration: l.duration,
+    description: l.description,
+    is_premium: l.isPremium,
+  });
 }
 
-export function saveLesson(l: Lesson): void {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(LS_KEY);
-  const custom: Lesson[] = raw ? JSON.parse(raw) : [];
-  const idx = custom.findIndex((x) => x.id === l.id);
-  if (idx >= 0) custom[idx] = l;
-  else custom.push(l);
-  localStorage.setItem(LS_KEY, JSON.stringify(custom));
-}
-
-export function deleteLesson(id: string): void {
-  if (typeof window === "undefined") return;
-  const raw = localStorage.getItem(LS_KEY);
-  const custom: Lesson[] = raw ? JSON.parse(raw) : [];
-  localStorage.setItem(LS_KEY, JSON.stringify(custom.filter((l) => l.id !== id)));
+export async function deleteLesson(id: string): Promise<void> {
+  await supabase.from("lessons").delete().eq("id", id);
 }

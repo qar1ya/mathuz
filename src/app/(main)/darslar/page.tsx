@@ -18,7 +18,7 @@ export default function DarslarPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
 
   useEffect(() => {
-    setLessons(getAllLessons());
+    getAllLessons().then(setLessons);
   }, []);
 
   return (

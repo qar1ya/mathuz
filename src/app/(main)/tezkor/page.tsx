@@ -15,8 +15,7 @@ export default function TezkorPage() {
   const [score, setScore] = useState(0);
 
   useEffect(() => {
-    const qs = getAllQuestions().sort(() => Math.random() - 0.5);
-    setQuestions(qs);
+    getAllQuestions().then((qs) => setQuestions(qs.sort(() => Math.random() - 0.5)));
   }, []);
 
   const q = questions[index];

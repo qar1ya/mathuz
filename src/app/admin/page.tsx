@@ -32,8 +32,8 @@ export default function AdminPage() {
   const [lPremium, setLPremium] = useState(false);
 
   useEffect(() => {
-    setQuestions(getAllQuestions());
-    setLessons(getAllLessons());
+    getAllQuestions().then(setQuestions);
+    getAllLessons().then(setLessons);
   }, []);
 
   function showToast(msg: string) {
@@ -41,7 +41,7 @@ export default function AdminPage() {
     setTimeout(() => setToast(""), 2500);
   }
 
-  function addQuestion() {
+  async function addQuestion() {
     if (!qText || qOpts.some((o) => !o)) return;
     const q: Question = {
       id: `custom_${Date.now()}`,
@@ -53,19 +53,19 @@ export default function AdminPage() {
       difficulty: qDiff,
       examType: qExams,
     };
-    saveQuestion(q);
-    setQuestions(getAllQuestions());
+    await saveQuestion(q);
+    getAllQuestions().then(setQuestions);
     setQText(""); setQOpts(["","","",""]); setQSolution("");
     showToast("Masala qo'shildi!");
   }
 
-  function removeQuestion(id: string) {
-    deleteQuestion(id);
-    setQuestions(getAllQuestions());
+  async function removeQuestion(id: string) {
+    await deleteQuestion(id);
+    getAllQuestions().then(setQuestions);
     showToast("O'chirildi");
   }
 
-  function addLesson() {
+  async function addLesson() {
     if (!lTitle || !lDuration) return;
     const l: Lesson = {
       id: `custom_${Date.now()}`,
@@ -75,15 +75,15 @@ export default function AdminPage() {
       description: lDesc,
       isPremium: lPremium,
     };
-    saveLesson(l);
-    setLessons(getAllLessons());
+    await saveLesson(l);
+    getAllLessons().then(setLessons);
     setLTitle(""); setLDuration(""); setLDesc(""); setLPremium(false);
     showToast("Dars qo'shildi!");
   }
 
-  function removeLesson(id: string) {
-    deleteLesson(id);
-    setLessons(getAllLessons());
+  async function removeLesson(id: string) {
+    await deleteLesson(id);
+    getAllLessons().then(setLessons);
     showToast("O'chirildi");
   }
 
@@ -175,11 +175,9 @@ export default function AdminPage() {
                       <div className="text-xs text-gray-400 truncate"><MathRenderer formula={q.text} /></div>
                       <span className="text-[10px] text-gray-600">{q.topic} · {q.difficulty}</span>
                     </div>
-                    {q.id.startsWith("custom_") && (
-                      <button onClick={() => removeQuestion(q.id)} className="ml-2 text-red-500 hover:text-red-400 shrink-0">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                    <button onClick={() => removeQuestion(q.id)} className="ml-2 text-red-500 hover:text-red-400 shrink-0">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -217,11 +215,9 @@ export default function AdminPage() {
                       <p className="text-sm text-white">{l.title}</p>
                       <span className="text-[10px] text-gray-600">{l.topic} · {l.duration}</span>
                     </div>
-                    {l.id.startsWith("custom_") && (
-                      <button onClick={() => removeLesson(l.id)} className="text-red-500 hover:text-red-400">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                    <button onClick={() => removeLesson(l.id)} className="text-red-500 hover:text-red-400">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 ))}
               </div>
