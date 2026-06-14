@@ -1,4 +1,5 @@
 "use client";
+// v2 — 70 parallel savol qo'shildi
 import { useState, useEffect } from "react";
 import { getAllQuestions } from "@/lib/store";
 import type { Question, Difficulty } from "@/lib/types";
