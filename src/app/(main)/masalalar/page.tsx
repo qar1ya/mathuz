@@ -131,6 +131,8 @@ const GEO_TOPICS: string[] = GEO_GROUPS.flatMap(g => g.topics);
 
 const DIFFICULTIES: (Difficulty | "Barchasi")[] = ["Barchasi", "Oson", "O'rtacha", "Qiyin"];
 
+const isImageUrl = (s: string) => s.startsWith("/") || s.startsWith("http");
+
 const diffBadge = (d: string) =>
   d === "Oson" ? "bg-green-500/15 text-green-400"
   : d === "O'rtacha" ? "bg-yellow-500/15 text-yellow-400"
@@ -349,12 +351,20 @@ export default function MasalalarPage() {
         {active ? (
           <>
             {/* LEFT — chizma (asl nusxa) */}
-            <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-8">
+            <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-6">
               {active.diagramSvg ? (
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  dangerouslySetInnerHTML={{ __html: active.diagramSvg }}
-                />
+                isImageUrl(active.diagramSvg) ? (
+                  <img
+                    src={active.diagramSvg}
+                    alt="diagram"
+                    className="max-w-full max-h-full object-contain rounded-lg"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    dangerouslySetInnerHTML={{ __html: active.diagramSvg }}
+                  />
+                )
               ) : (
                 <div className="text-center select-none">
                   <div className="text-6xl text-gray-800 mb-3">○</div>
