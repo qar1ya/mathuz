@@ -2,17 +2,7 @@ export type ExamType = "DTM" | "Milliy Sertifikat" | "Maktab";
 
 export type Difficulty = "Oson" | "O'rtacha" | "Qiyin";
 
-export type Topic =
-  | "Algebra"
-  | "Geometriya"
-  | "Trigonometriya"
-  | "Logarifm"
-  | "Integral"
-  | "Hosila"
-  | "Ehtimollik"
-  | "Kombinatorika"
-  | "Ketma-ketlik"
-  | "Tengsizlik";
+export type Topic = string;
 
 export interface Question {
   id: string;
@@ -23,6 +13,7 @@ export interface Question {
   topic: Topic;
   difficulty: Difficulty;
   examType: ExamType[];
+  diagramSvg?: string | null;
 }
 
 export interface Lesson {

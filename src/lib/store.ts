@@ -14,6 +14,7 @@ export async function getAllQuestions(): Promise<Question[]> {
     topic: q.topic,
     difficulty: q.difficulty,
     examType: q.exam_type,
+    diagramSvg: q.diagram_svg ?? null,
   }));
 }
 
@@ -27,6 +28,7 @@ export async function saveQuestion(q: Question): Promise<void> {
     topic: q.topic,
     difficulty: q.difficulty,
     exam_type: q.examType,
+    diagram_svg: q.diagramSvg ?? null,
   });
 }
 
