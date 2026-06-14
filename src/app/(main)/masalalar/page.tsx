@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getAllQuestions } from "@/lib/store";
 import type { Question, Difficulty } from "@/lib/types";
 import MathRenderer from "@/components/math/MathRenderer";
-import { Bookmark, CheckCircle, XCircle, ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft, Flag } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Category = "Algebra" | "Geometriya";
