@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getAllQuestions } from "@/lib/store";
 import type { Question, Difficulty } from "@/lib/types";
 import MathRenderer from "@/components/math/MathRenderer";
-import { CheckCircle, XCircle, ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft, Flag } from "lucide-react";
+import { ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Category = "Algebra" | "Geometriya";
@@ -145,7 +145,6 @@ export default function MasalalarPage() {
   const [diff, setDiff] = useState<Difficulty | "Barchasi">("Barchasi");
   const [idx, setIdx] = useState(0);
   const [showSol, setShowSol] = useState(false);
-  const [picked, setPicked] = useState<string | null>(null);
 
   useEffect(() => { getAllQuestions().then(setAll); }, []);
 
@@ -163,22 +162,17 @@ export default function MasalalarPage() {
   function openGeoGroup(g: GeoGroup) { setActiveGeoGroup(g); setView("geocat"); setActiveTopic(null); }
   function openTopic(t: string) {
     setActiveTopic(t); setView("questions");
-    setDiff("Barchasi"); setIdx(0); setShowSol(false); setPicked(null);
+    setDiff("Barchasi"); setIdx(0); setShowSol(false);
   }
   function backToLanding() { setView("landing"); setCat(null); setActiveGeoGroup(null); }
   function backToCategory() { setView("category"); setActiveGeoGroup(null); setActiveTopic(null); }
   function backToGeoCat() { setView("geocat"); setActiveTopic(null); }
 
-  function pickAnswer(opt: string) {
-    if (picked !== null) return;
-    setPicked(opt);
-  }
-
   function goNext() {
-    if (idx < filtered.length - 1) { setIdx(idx + 1); setPicked(null); setShowSol(false); }
+    if (idx < filtered.length - 1) { setIdx(idx + 1); setShowSol(false); }
   }
   function goPrev() {
-    if (idx > 0) { setIdx(idx - 1); setPicked(null); setShowSol(false); }
+    if (idx > 0) { setIdx(idx - 1); setShowSol(false); }
   }
 
   // ── LANDING ───────────────────────────────────────────────────────────────
@@ -341,7 +335,7 @@ export default function MasalalarPage() {
         </div>
         <div className="flex items-center gap-2">
           {DIFFICULTIES.map(d => (
-            <button key={d} onClick={() => { setDiff(d); setIdx(0); setPicked(null); setShowSol(false); }}
+            <button key={d} onClick={() => { setDiff(d); setIdx(0); setShowSol(false); }}
               className={cn("text-xs px-3 py-1.5 rounded-full transition-colors",
                 diff === d ? "bg-brand text-black font-semibold" : "text-gray-500 hover:text-white bg-dark-card border border-dark-border")}>
               {d === "Barchasi" ? "Barchasi" : d}
@@ -350,93 +344,85 @@ export default function MasalalarPage() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Main: two panels */}
+      <div className="flex-1 flex overflow-hidden">
         {active ? (
-          <div className="max-w-2xl mx-auto px-6 py-8">
-            {/* Question number + badges */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-dark-card border border-dark-border flex items-center justify-center text-white text-sm font-bold">
-                  {idx + 1}
+          <>
+            {/* LEFT — chizma (asl nusxa) */}
+            <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-8">
+              {active.diagramSvg ? (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  dangerouslySetInnerHTML={{ __html: active.diagramSvg }}
+                />
+              ) : (
+                <div className="text-center select-none">
+                  <div className="text-6xl text-gray-800 mb-3">○</div>
+                  <p className="text-xs text-gray-700 uppercase tracking-widest">chizma yo&apos;q</p>
                 </div>
-                <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", diffBadge(active.difficulty))}>
-                  {active.difficulty}
-                </span>
-                {active.examType.map(e => (
-                  <span key={e} className="text-xs bg-brand/10 text-brand px-2.5 py-1 rounded-full">{e}</span>
-                ))}
-              </div>
-              <button className="flex items-center gap-1.5 text-gray-500 hover:text-yellow-400 transition-colors text-xs">
-                <Flag size={13} /> Belgilash
-              </button>
-            </div>
-
-            {/* Question */}
-            <div className="bg-dark-card border border-dark-border rounded-2xl p-6 mb-6">
-              <div className="text-white text-base leading-relaxed">
-                <MathRenderer formula={active.text} displayMode />
-              </div>
-              {active.diagramSvg && (
-                <div className="mt-5 flex justify-center" dangerouslySetInnerHTML={{ __html: active.diagramSvg }} />
               )}
             </div>
 
-            {/* Answer options */}
-            <div className="flex flex-col gap-3 mb-8">
-              {active.options.map((opt, i) => {
-                const letter = String.fromCharCode(65 + i);
-                const isCorrect = opt === active.answer;
-                const isSelected = picked === opt;
-                const revealed = picked !== null || showSol;
-                return (
-                  <button key={i} onClick={() => pickAnswer(opt)}
-                    disabled={picked !== null}
-                    className={cn(
-                      "w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 text-left transition-all",
-                      !revealed && "bg-dark-card border-dark-border hover:border-brand/50 hover:bg-dark-hover text-white",
-                      revealed && isCorrect && "bg-green-500/10 border-green-500 text-green-300",
-                      revealed && isSelected && !isCorrect && "bg-red-500/10 border-red-500 text-red-400",
-                      revealed && !isSelected && !isCorrect && "bg-dark-card border-dark-border text-gray-600 opacity-60"
-                    )}>
-                    <span className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold shrink-0 transition-all",
-                      !revealed && "border-gray-600 text-gray-400",
-                      revealed && isCorrect && "border-green-500 text-green-400 bg-green-500/20",
-                      revealed && isSelected && !isCorrect && "border-red-500 text-red-400 bg-red-500/20",
-                      revealed && !isSelected && !isCorrect && "border-gray-700 text-gray-600"
-                    )}>
-                      {letter}
-                    </span>
-                    <span className="flex-1 text-sm leading-relaxed">
-                      <MathRenderer formula={opt} />
-                    </span>
-                    {revealed && isCorrect && <CheckCircle size={18} className="text-green-400 shrink-0" />}
-                    {revealed && isSelected && !isCorrect && <XCircle size={18} className="text-red-400 shrink-0" />}
+            {/* RIGHT — savol + javob */}
+            <div className="w-1/2 flex flex-col overflow-y-auto">
+              <div className="p-8 flex flex-col flex-1">
+                {/* Badges */}
+                <div className="flex items-center gap-2 mb-6 flex-wrap">
+                  <div className="w-8 h-8 rounded-lg bg-dark-card border border-dark-border flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    {idx + 1}
+                  </div>
+                  <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", diffBadge(active.difficulty))}>
+                    {active.difficulty}
+                  </span>
+                  {active.examType.map(e => (
+                    <span key={e} className="text-xs bg-brand/10 text-brand px-2.5 py-1 rounded-full">{e}</span>
+                  ))}
+                  <button className="ml-auto flex items-center gap-1.5 text-gray-500 hover:text-yellow-400 transition-colors text-xs">
+                    <Flag size={13} /> Belgilash
                   </button>
-                );
-              })}
-            </div>
+                </div>
 
-            {/* Explanation */}
-            {(picked !== null || showSol) && active.solution && (
-              <div className="bg-dark-card border border-brand/20 rounded-2xl p-5 mb-6">
-                <p className="text-brand text-xs font-semibold uppercase tracking-widest mb-3">Yechim</p>
-                <div className="text-white text-sm leading-relaxed">
-                  <MathRenderer formula={active.solution} displayMode />
+                {/* Savol matni */}
+                <div className="text-white text-[15px] leading-relaxed mb-8">
+                  <MathRenderer formula={active.text} displayMode />
+                </div>
+
+                {/* Javob */}
+                <div className="mt-auto">
+                  {!showSol ? (
+                    <button
+                      onClick={() => setShowSol(true)}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-dark-card border border-dark-border rounded-xl text-gray-400 hover:border-brand hover:text-brand transition-all text-sm font-medium">
+                      👁 Javobni ko&apos;rish
+                    </button>
+                  ) : (
+                    <div className="bg-dark-card border border-brand/20 rounded-2xl p-5">
+                      <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">To&apos;g&apos;ri javob</p>
+                      <p className="text-brand text-3xl font-bold mb-1">
+                        <MathRenderer formula={active.answer} />
+                      </p>
+                      {active.solution && (
+                        <>
+                          <div className="h-px bg-dark-border my-4" />
+                          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Yechim</p>
+                          <div className="text-gray-300 text-sm leading-relaxed">
+                            <MathRenderer formula={active.solution} displayMode />
+                          </div>
+                        </>
+                      )}
+                      <button
+                        onClick={() => setShowSol(false)}
+                        className="mt-4 text-xs text-gray-600 hover:text-gray-400 transition-colors">
+                        ▲ Yopish
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-
-            {picked === null && (
-              <button onClick={() => setShowSol(!showSol)}
-                className="text-gray-500 hover:text-white text-sm transition-colors underline underline-offset-4">
-                {showSol ? "Yechimni yashirish" : "Yechimni ko'rish"}
-              </button>
-            )}
-          </div>
+            </div>
+          </>
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex-1 flex items-center justify-center">
             <p className="text-gray-600 text-sm">Bu mavzuda hali masala yo&apos;q</p>
           </div>
         )}
