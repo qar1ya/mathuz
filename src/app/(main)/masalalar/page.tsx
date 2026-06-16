@@ -147,6 +147,7 @@ export default function MasalalarPage() {
   const [diff, setDiff] = useState<Difficulty | "Barchasi">("Barchasi");
   const [idx, setIdx] = useState(0);
   const [showSol, setShowSol] = useState(false);
+  const [userAnswer, setUserAnswer] = useState("");
 
   useEffect(() => { getAllQuestions().then(setAll); }, []);
 
@@ -164,17 +165,17 @@ export default function MasalalarPage() {
   function openGeoGroup(g: GeoGroup) { setActiveGeoGroup(g); setView("geocat"); setActiveTopic(null); }
   function openTopic(t: string) {
     setActiveTopic(t); setView("questions");
-    setDiff("Barchasi"); setIdx(0); setShowSol(false);
+    setDiff("Barchasi"); setIdx(0); setShowSol(false); setUserAnswer("");
   }
   function backToLanding() { setView("landing"); setCat(null); setActiveGeoGroup(null); }
   function backToCategory() { setView("category"); setActiveGeoGroup(null); setActiveTopic(null); }
   function backToGeoCat() { setView("geocat"); setActiveTopic(null); }
 
   function goNext() {
-    if (idx < filtered.length - 1) { setIdx(idx + 1); setShowSol(false); }
+    if (idx < filtered.length - 1) { setIdx(idx + 1); setShowSol(false); setUserAnswer(""); }
   }
   function goPrev() {
-    if (idx > 0) { setIdx(idx - 1); setShowSol(false); }
+    if (idx > 0) { setIdx(idx - 1); setShowSol(false); setUserAnswer(""); }
   }
 
   // ── LANDING ───────────────────────────────────────────────────────────────
@@ -337,7 +338,7 @@ export default function MasalalarPage() {
         </div>
         <div className="flex items-center gap-2">
           {DIFFICULTIES.map(d => (
-            <button key={d} onClick={() => { setDiff(d); setIdx(0); setShowSol(false); }}
+            <button key={d} onClick={() => { setDiff(d); setIdx(0); setShowSol(false); setUserAnswer(""); }}
               className={cn("text-xs px-3 py-1.5 rounded-full transition-colors",
                 diff === d ? "bg-brand text-black font-semibold" : "text-gray-500 hover:text-white bg-dark-card border border-dark-border")}>
               {d === "Barchasi" ? "Barchasi" : d}
@@ -346,91 +347,39 @@ export default function MasalalarPage() {
         </div>
       </div>
 
-      {/* Main: two panels */}
+      {/* Main */}
       <div className="flex-1 flex overflow-hidden">
         {active ? (
-          <>
-            {/* LEFT — chizma (asl nusxa) */}
-            <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-6">
-              {active.diagramSvg ? (
-                isImageUrl(active.diagramSvg) ? (
-                  <img
-                    src={active.diagramSvg}
-                    alt="diagram"
-                    className="max-w-full max-h-full object-contain rounded-lg"
-                  />
+          active.diagramSvg ? (
+            /* ── TWO-PANEL: diagram + question ── */
+            <>
+              <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-6">
+                {isImageUrl(active.diagramSvg) ? (
+                  <img src={active.diagramSvg} alt="diagram" className="max-w-full max-h-full object-contain rounded-lg" />
                 ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: active.diagramSvg }}
-                  />
-                )
-              ) : (
-                <div className="text-center select-none">
-                  <div className="text-6xl text-gray-800 mb-3">○</div>
-                  <p className="text-xs text-gray-700 uppercase tracking-widest">chizma yo&apos;q</p>
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT — savol + javob */}
-            <div className="w-1/2 flex flex-col overflow-y-auto">
-              <div className="p-8 flex flex-col flex-1">
-                {/* Badges */}
-                <div className="flex items-center gap-2 mb-6 flex-wrap">
-                  <div className="w-8 h-8 rounded-lg bg-dark-card border border-dark-border flex items-center justify-center text-white text-sm font-bold shrink-0">
-                    {idx + 1}
-                  </div>
-                  <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", diffBadge(active.difficulty))}>
-                    {active.difficulty}
-                  </span>
-                  {active.examType.map(e => (
-                    <span key={e} className="text-xs bg-brand/10 text-brand px-2.5 py-1 rounded-full">{e}</span>
-                  ))}
-                  <button className="ml-auto flex items-center gap-1.5 text-gray-500 hover:text-yellow-400 transition-colors text-xs">
-                    <Flag size={13} /> Belgilash
-                  </button>
-                </div>
-
-                {/* Savol matni */}
-                <div className="text-white text-[15px] leading-relaxed mb-8">
-                  <MathRenderer formula={active.text} displayMode />
-                </div>
-
-                {/* Javob */}
-                <div className="mt-auto">
-                  {!showSol ? (
-                    <button
-                      onClick={() => setShowSol(true)}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-dark-card border border-dark-border rounded-xl text-gray-400 hover:border-brand hover:text-brand transition-all text-sm font-medium">
-                      👁 Javobni ko&apos;rish
-                    </button>
-                  ) : (
-                    <div className="bg-dark-card border border-brand/20 rounded-2xl p-5">
-                      <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">To&apos;g&apos;ri javob</p>
-                      <p className="text-brand text-3xl font-bold mb-1">
-                        <MathRenderer formula={active.answer} />
-                      </p>
-                      {active.solution && (
-                        <>
-                          <div className="h-px bg-dark-border my-4" />
-                          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Yechim</p>
-                          <div className="text-gray-300 text-sm leading-relaxed">
-                            <MathRenderer formula={active.solution} displayMode />
-                          </div>
-                        </>
-                      )}
-                      <button
-                        onClick={() => setShowSol(false)}
-                        className="mt-4 text-xs text-gray-600 hover:text-gray-400 transition-colors">
-                        ▲ Yopish
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: active.diagramSvg }} />
+                )}
+              </div>
+              <div className="w-1/2 flex flex-col overflow-y-auto">
+                <QuestionPanel
+                  active={active} idx={idx}
+                  userAnswer={userAnswer} setUserAnswer={setUserAnswer}
+                  showSol={showSol} setShowSol={setShowSol}
+                />
+              </div>
+            </>
+          ) : (
+            /* ── SINGLE-PANEL: text only, centered ── */
+            <div className="flex-1 overflow-y-auto flex justify-center">
+              <div className="w-full max-w-2xl">
+                <QuestionPanel
+                  active={active} idx={idx}
+                  userAnswer={userAnswer} setUserAnswer={setUserAnswer}
+                  showSol={showSol} setShowSol={setShowSol}
+                />
               </div>
             </div>
-          </>
+          )
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-gray-600 text-sm">Bu mavzuda hali masala yo&apos;q</p>
@@ -461,6 +410,90 @@ export default function MasalalarPage() {
               : "bg-brand text-black hover:bg-brand/90")}>
           Keyingi <ChevronRight size={16} />
         </button>
+      </div>
+    </div>
+  );
+}
+
+function QuestionPanel({
+  active, idx, userAnswer, setUserAnswer, showSol, setShowSol,
+}: {
+  active: Question; idx: number;
+  userAnswer: string; setUserAnswer: (v: string) => void;
+  showSol: boolean; setShowSol: (v: boolean) => void;
+}) {
+  return (
+    <div className="p-8 flex flex-col flex-1 min-h-full">
+      {/* Badges */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <div className="w-8 h-8 rounded-lg bg-dark-card border border-dark-border flex items-center justify-center text-white text-sm font-bold shrink-0">
+          {idx + 1}
+        </div>
+        <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", diffBadge(active.difficulty))}>
+          {active.difficulty}
+        </span>
+        {active.examType.map(e => (
+          <span key={e} className="text-xs bg-brand/10 text-brand px-2.5 py-1 rounded-full">{e}</span>
+        ))}
+        <button className="ml-auto flex items-center gap-1.5 text-gray-500 hover:text-yellow-400 transition-colors text-xs">
+          <Flag size={13} /> Belgilash
+        </button>
+      </div>
+
+      {/* Savol matni */}
+      <div className="text-white text-[15px] leading-relaxed mb-8">
+        <MathRenderer formula={active.text} displayMode />
+      </div>
+
+      {/* Javob maydoni */}
+      <div className="mt-auto space-y-3">
+        {!showSol ? (
+          <>
+            <input
+              type="text"
+              value={userAnswer}
+              onChange={e => setUserAnswer(e.target.value)}
+              placeholder="Javobingizni yozing..."
+              className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-brand transition-colors"
+            />
+            <button
+              onClick={() => setShowSol(true)}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-dark-card border border-dark-border rounded-xl text-gray-400 hover:border-brand hover:text-brand transition-all text-sm font-medium">
+              👁 Javobni ko&apos;rish
+            </button>
+          </>
+        ) : (
+          <div className="bg-dark-card border border-brand/20 rounded-2xl p-5 space-y-4">
+            {userAnswer.trim() && (
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Sizning javobingiz</p>
+                <p className="text-gray-300 text-lg">{userAnswer}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">To&apos;g&apos;ri javob</p>
+              <p className="text-brand text-3xl font-bold">
+                <MathRenderer formula={active.answer} />
+              </p>
+            </div>
+            {active.solution && (
+              <>
+                <div className="h-px bg-dark-border" />
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Yechim</p>
+                  <div className="text-gray-300 text-sm leading-relaxed">
+                    <MathRenderer formula={active.solution} displayMode />
+                  </div>
+                </div>
+              </>
+            )}
+            <button
+              onClick={() => setShowSol(false)}
+              className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+              ▲ Yopish
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
