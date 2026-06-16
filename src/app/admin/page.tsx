@@ -1,230 +1,287 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getAllQuestions, saveQuestion, deleteQuestion, getAllLessons, saveLesson, deleteLesson } from "@/lib/store";
-import type { Question, Lesson, Topic, Difficulty, ExamType } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import MathRenderer from "@/components/math/MathRenderer";
-import { Trash2, Plus, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 
-const TOPICS: Topic[] = ["Algebra","Geometriya","Trigonometriya","Logarifm","Integral","Hosila","Ehtimollik","Kombinatorika","Ketma-ketlik","Tengsizlik"];
-const DIFFICULTIES: Difficulty[] = ["Oson","O'rtacha","Qiyin"];
-const EXAM_TYPES: ExamType[] = ["DTM","Milliy Sertifikat","Maktab"];
+const PASSWORD = "mathuz2024";
+
+const TOPICS = [
+  "O'tkir va o'tmas burchaklar",
+  "Kesishuvchi to'g'ri chiziqlar",
+  "Parallel to'g'ri chiziqlar va kesuvchi",
+  "Uchburchak burchaklari",
+  "Uchburchakning tashqi burchaklari",
+  "To'g'ri burchakli uchburchak. Pifagor teoremasi",
+  "Teng yonli to'g'ri burchakli uchburchak",
+  "Eng ko'p uchraydigan to'g'ri burchakli uchburchaklar",
+  "To'g'ri burchakli uchburchakning yuzi va balandligi",
+  "To'g'ri burchakli uchburchakning gipotenuzasiga tushirilgan medianasi",
+  "To'g'ri burchakli uchburchak o'tkir burchagining sin, cos, tan, cot",
+  "To'g'ri burchakli uchburchakda balandlik va burchaklar",
+  "Katetlarning gipotenuzadagi proyeksiyalari",
+  "To'g'ri burchakli uchburchakda o'xshashlik",
+  "Uchburchak tomonlarini va burchaklarini taqqoslash",
+  "Uchburchak tengsizligi",
+  "Kosinuslar teoremasi",
+  "Sinuslar teoremasi",
+  "Uchburchakning to'g'ri burchakli, o'tkir burchakli va o'tmas burchakli turlari",
+  "Uchburchakning yuzini hisoblash",
+  "Uchburchak bissektrisasi",
+  "Uchburchak medianasi",
+  "Uchburchakning o'rta chizig'i",
+  "Uchburchaklarning o'xshashligi",
+  "Kvadrat",
+  "To'g'ri to'rtburchak",
+  "To'g'ri to'rtburchakda uchburchaklarning o'xshashligini qo'llash",
+  "Parallelogramm",
+  "Romb",
+  "Trapetsiya",
+  "Deltoid",
+  "Ixtiyoriy to'rtburchaklar",
+  "Aylana va doira",
+  "Aylanada uzunlik",
+  "Uchburchakka tashqi chizilgan aylana",
+  "Uchburchakka ichki chizilgan aylana",
+  "Muntazam oltiburchak va aylana",
+  "Trapetsiyaga ichki chizilgan aylana",
+  "Trapetsiyaga tashqi chizilgan aylana",
+  "Qavariq ko'pburchaklar",
+  "Muntazam n-burchakka tashqi va ichki chizilgan aylana",
+  "Muntazam ko'pburchakning yuzi",
+  "Ba'zi muntazam ko'pburchaklar",
+  "Dekart koordinatalar sistemasi",
+  "Koordinatalari bilan berilgan uchburchakning yuzi",
+  "Koordinatalar sistemasida parallelogramm",
+  "Aylana tenglamasi",
+  "Doira tenglamasi",
+  "Vektorlar",
+  "To'g'ri chiziq",
+  "To'g'ri chiziqqa doir masalalarda vektorlardan foydalanish",
+  "Stereometriya",
+  "Algebra",
+  "Tengsizlik",
+  "Logarifm",
+  "Hosila",
+  "Integral",
+  "Ehtimollik",
+  "Kombinatorika",
+  "Ketma-ketlik",
+];
+
+const EXAM_TYPES = ["DTM", "Milliy Sertifikat", "Maktab"];
+
+const emptyForm = () => ({
+  text: "", answer: "", solution: "", diagram_svg: "",
+  topic: TOPICS[0], difficulty: "O'rtacha",
+  exam_type: ["DTM", "Milliy Sertifikat", "Maktab"] as string[],
+});
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<"masalalar"|"darslar">("masalalar");
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [toast, setToast] = useState("");
+  const [auth, setAuth] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pwErr, setPwErr] = useState(false);
+  const [form, setForm] = useState(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [tab, setTab] = useState<"add" | "list">("add");
+  const [questions, setQuestions] = useState<{ id: string; text: string; topic: string; difficulty: string }[]>([]);
+  const [loadingQ, setLoadingQ] = useState(false);
+  const [preview, setPreview] = useState(false);
 
-  const [qText, setQText] = useState("");
-  const [qOpts, setQOpts] = useState(["","","",""]);
-  const [qAnswer, setQAnswer] = useState(0);
-  const [qTopic, setQTopic] = useState<Topic>("Algebra");
-  const [qDiff, setQDiff] = useState<Difficulty>("Oson");
-  const [qExams, setQExams] = useState<ExamType[]>(["DTM"]);
-  const [qSolution, setQSolution] = useState("");
-
-  const [lTitle, setLTitle] = useState("");
-  const [lTopic, setLTopic] = useState<Topic>("Algebra");
-  const [lDuration, setLDuration] = useState("");
-  const [lDesc, setLDesc] = useState("");
-  const [lPremium, setLPremium] = useState(false);
-
-  useEffect(() => {
-    getAllQuestions().then(setQuestions);
-    getAllLessons().then(setLessons);
-  }, []);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
+  async function loadQuestions() {
+    setLoadingQ(true);
+    const { data } = await supabase.from("questions").select("id,text,topic,difficulty").order("topic");
+    setQuestions(data ?? []);
+    setLoadingQ(false);
   }
 
-  async function addQuestion() {
-    if (!qText || qOpts.some((o) => !o)) return;
-    const q: Question = {
-      id: `custom_${Date.now()}`,
-      text: qText,
-      options: qOpts,
-      answer: qOpts[qAnswer],
-      solution: qSolution || undefined,
-      topic: qTopic,
-      difficulty: qDiff,
-      examType: qExams,
-    };
-    await saveQuestion(q);
-    getAllQuestions().then(setQuestions);
-    setQText(""); setQOpts(["","","",""]); setQSolution("");
-    showToast("Masala qo'shildi!");
+  useEffect(() => { if (auth && tab === "list") loadQuestions(); }, [auth, tab]);
+
+  function login() {
+    if (pw === PASSWORD) { setAuth(true); setPwErr(false); }
+    else setPwErr(true);
   }
 
-  async function removeQuestion(id: string) {
-    await deleteQuestion(id);
-    getAllQuestions().then(setQuestions);
-    showToast("O'chirildi");
+  async function handleSave() {
+    if (!form.text.trim() || !form.answer.trim()) { setMsg("Savol va javob majburiy!"); return; }
+    setSaving(true); setMsg("");
+    const { error } = await supabase.from("questions").insert([{
+      id: `q-${Date.now()}`,
+      text: form.text.trim(),
+      options: [],
+      answer: form.answer.trim(),
+      solution: form.solution.trim() || null,
+      topic: form.topic,
+      difficulty: form.difficulty,
+      exam_type: form.exam_type,
+      diagram_svg: form.diagram_svg.trim() || null,
+    }]);
+    setSaving(false);
+    if (error) { setMsg("Xato: " + error.message); return; }
+    setMsg("✅ Saqlandi!");
+    setForm(emptyForm());
+    setTimeout(() => setMsg(""), 3000);
   }
 
-  async function addLesson() {
-    if (!lTitle || !lDuration) return;
-    const l: Lesson = {
-      id: `custom_${Date.now()}`,
-      title: lTitle,
-      topic: lTopic,
-      duration: lDuration,
-      description: lDesc,
-      isPremium: lPremium,
-    };
-    await saveLesson(l);
-    getAllLessons().then(setLessons);
-    setLTitle(""); setLDuration(""); setLDesc(""); setLPremium(false);
-    showToast("Dars qo'shildi!");
+  async function handleDelete(id: string) {
+    if (!confirm("O'chirilsinmi?")) return;
+    await supabase.from("questions").delete().eq("id", id);
+    loadQuestions();
   }
 
-  async function removeLesson(id: string) {
-    await deleteLesson(id);
-    getAllLessons().then(setLessons);
-    showToast("O'chirildi");
+  function toggleExam(e: string) {
+    setForm(f => ({
+      ...f,
+      exam_type: f.exam_type.includes(e) ? f.exam_type.filter(x => x !== e) : [...f.exam_type, e],
+    }));
   }
 
-  const inputCls = "w-full bg-dark-hover border border-dark-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand/50";
-  const selectCls = "w-full bg-dark-hover border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none";
+  const inp = "w-full px-3 py-2.5 bg-dark-hover border border-dark-border rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-brand font-mono";
+
+  if (!auth) return (
+    <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+      <div className="bg-dark-card border border-dark-border rounded-2xl p-8 w-80 space-y-4">
+        <h1 className="text-white text-xl font-bold text-center">Admin Panel</h1>
+        <input type="password" value={pw} onChange={e => setPw(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && login()}
+          placeholder="Parol..." className={inp} />
+        {pwErr && <p className="text-red-400 text-xs text-center">Noto&apos;g&apos;ri parol</p>}
+        <button onClick={login}
+          className="w-full py-2.5 bg-brand text-black font-bold rounded-xl text-sm hover:bg-brand/90 transition-colors">
+          Kirish
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-dark-bg p-6">
-      {toast && (
-        <div className="fixed top-4 right-4 bg-brand text-black font-semibold px-4 py-2 rounded-lg text-sm z-50">
-          {toast}
-        </div>
-      )}
-
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
-            <ArrowLeft size={16} /> Orqaga
-          </Link>
-          <h1 className="text-white font-bold text-xl">Admin Panel</h1>
-        </div>
-
-        <div className="flex gap-2 mb-6">
-          {(["masalalar","darslar"] as const).map((t) => (
+    <div className="min-h-screen bg-dark-bg text-white">
+      {/* Header */}
+      <div className="bg-dark-card border-b border-dark-border px-6 py-3 flex items-center justify-between">
+        <h1 className="text-brand font-bold text-base">MathUz — Admin</h1>
+        <div className="flex gap-2">
+          {(["add", "list"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize",
-                tab === t ? "bg-brand text-black" : "bg-dark-card text-gray-400 hover:text-white")}>
-              {t === "masalalar" ? "Masalalar" : "Darslar"}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${tab === t ? "bg-brand text-black" : "bg-dark-hover text-gray-400 hover:text-white"}`}>
+              {t === "add" ? "+ Savol qo'shish" : `Ro'yxat (${questions.length})`}
             </button>
           ))}
         </div>
+      </div>
 
-        {tab === "masalalar" && (
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5 space-y-3">
-              <h2 className="text-white font-semibold">Yangi masala</h2>
-              <textarea value={qText} onChange={(e) => setQText(e.target.value)}
-                placeholder="Masala matni (LaTeX: \frac{1}{2})"
-                className={cn(inputCls, "h-20 resize-none")} />
-              {qText && (
-                <div className="bg-dark-hover border border-dark-border rounded-lg p-3">
-                  <p className="text-[10px] text-gray-600 mb-1">Ko&apos;rinish:</p>
-                  <MathRenderer formula={qText} displayMode />
-                </div>
-              )}
-              {qOpts.map((opt, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <button onClick={() => setQAnswer(i)}
-                    className={cn("w-7 h-7 rounded-full border text-xs font-bold shrink-0 transition-colors",
-                      qAnswer === i ? "bg-brand border-brand text-black" : "border-dark-border text-gray-500")}>
-                    {String.fromCharCode(65+i)}
+      {/* ADD TAB */}
+      {tab === "add" && (
+        <div className="max-w-2xl mx-auto p-6 space-y-4">
+
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">Savol matni *</label>
+            <textarea rows={4} value={form.text} onChange={e => setForm(f => ({ ...f, text: e.target.value }))}
+              placeholder="Masala matni... LaTeX: \frac{3}{5}, \sin\alpha, \sqrt{2}"
+              className={`${inp} resize-none`} />
+            {form.text && (
+              <button onClick={() => setPreview(p => !p)}
+                className="text-xs text-gray-500 hover:text-brand mt-1 transition-colors">
+                {preview ? "▲ Yashirish" : "👁 Ko'rinishini tekshirish"}
+              </button>
+            )}
+            {preview && form.text && (
+              <div className="mt-2 bg-dark-hover border border-dark-border rounded-xl p-4 text-white text-sm">
+                <MathRenderer formula={form.text} displayMode />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">To&apos;g&apos;ri javob *</label>
+            <input type="text" value={form.answer} onChange={e => setForm(f => ({ ...f, answer: e.target.value }))}
+              placeholder="\cos\alpha = \frac{4}{5}  yoki  150  yoki  AD=8,\ DB=32"
+              className={inp} />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">Yechim (ixtiyoriy)</label>
+            <textarea rows={3} value={form.solution} onChange={e => setForm(f => ({ ...f, solution: e.target.value }))}
+              placeholder="Batafsil yechim (LaTeX qo'llasa bo'ladi)..."
+              className={`${inp} resize-none`} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">Mavzu *</label>
+              <select value={form.topic} onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
+                className={`${inp} font-sans`}>
+                {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">Qiyinlik</label>
+              <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))}
+                className={`${inp} font-sans`}>
+                <option>Oson</option>
+                <option>O&apos;rtacha</option>
+                <option>Qiyin</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">Imtihon turi</label>
+            <div className="flex gap-2">
+              {EXAM_TYPES.map(e => (
+                <button key={e} onClick={() => toggleExam(e)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    form.exam_type.includes(e)
+                      ? "bg-brand/15 border-brand text-brand"
+                      : "border-dark-border text-gray-500 hover:text-white"
+                  }`}>
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-widest mb-1 block">
+              Chizma — rasm yo&apos;li yoki SVG (ixtiyoriy)
+            </label>
+            <textarea rows={2} value={form.diagram_svg} onChange={e => setForm(f => ({ ...f, diagram_svg: e.target.value }))}
+              placeholder="/diagrams/rasm.png  yoki  <svg>...</svg>"
+              className={`${inp} resize-none`} />
+          </div>
+
+          {msg && <p className={`text-sm font-medium ${msg.startsWith("✅") ? "text-brand" : "text-red-400"}`}>{msg}</p>}
+
+          <button onClick={handleSave} disabled={saving}
+            className="w-full py-3 bg-brand text-black font-bold rounded-xl text-sm hover:bg-brand/90 transition-colors disabled:opacity-50">
+            {saving ? "Saqlanmoqda..." : "✓ Saqlash"}
+          </button>
+        </div>
+      )}
+
+      {/* LIST TAB */}
+      {tab === "list" && (
+        <div className="max-w-3xl mx-auto p-6">
+          {loadingQ ? <p className="text-gray-500 text-sm">Yuklanmoqda...</p> : (
+            <div className="space-y-2">
+              {questions.map(q => (
+                <div key={q.id} className="bg-dark-card border border-dark-border rounded-xl px-4 py-3 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-brand mb-0.5">{q.topic} · <span className="text-gray-500">{q.difficulty}</span></p>
+                    <p className="text-gray-300 text-sm line-clamp-2">{q.text.slice(0, 120)}{q.text.length > 120 ? "…" : ""}</p>
+                    <p className="text-gray-700 text-xs mt-0.5">{q.id}</p>
+                  </div>
+                  <button onClick={() => handleDelete(q.id)}
+                    className="shrink-0 p-1.5 text-red-500/60 hover:text-red-400 transition-colors">
+                    <Trash2 size={15} />
                   </button>
-                  <input value={opt} onChange={(e) => { const o=[...qOpts]; o[i]=e.target.value; setQOpts(o); }}
-                    placeholder={`${String.fromCharCode(65+i)} variant`} className={inputCls} />
                 </div>
               ))}
-              <div className="grid grid-cols-2 gap-2">
-                <select value={qTopic} onChange={(e) => setQTopic(e.target.value as Topic)} className={selectCls}>
-                  {TOPICS.map((t) => <option key={t}>{t}</option>)}
-                </select>
-                <select value={qDiff} onChange={(e) => setQDiff(e.target.value as Difficulty)} className={selectCls}>
-                  {DIFFICULTIES.map((d) => <option key={d}>{d}</option>)}
-                </select>
-              </div>
-              <div className="flex gap-3">
-                {EXAM_TYPES.map((e) => (
-                  <label key={e} className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer">
-                    <input type="checkbox" checked={qExams.includes(e)}
-                      onChange={() => setQExams((prev) => prev.includes(e) ? prev.filter((x)=>x!==e) : [...prev,e])}
-                      className="accent-brand" />
-                    {e}
-                  </label>
-                ))}
-              </div>
-              <input value={qSolution} onChange={(e) => setQSolution(e.target.value)}
-                placeholder="Yechim (ixtiyoriy, LaTeX)" className={inputCls} />
-              <button onClick={addQuestion}
-                className="w-full flex items-center justify-center gap-2 bg-brand text-black font-semibold py-2 rounded-lg hover:bg-brand-dark transition-colors text-sm">
-                <Plus size={16} /> Qo&apos;shish
-              </button>
+              {questions.length === 0 && <p className="text-gray-600 text-sm">Savollar yo&apos;q</p>}
             </div>
-
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5">
-              <h2 className="text-white font-semibold mb-3">Barcha masalalar ({questions.length})</h2>
-              <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {questions.map((q) => (
-                  <div key={q.id} className="flex items-center justify-between p-3 bg-dark-hover rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-gray-400 truncate"><MathRenderer formula={q.text} /></div>
-                      <span className="text-[10px] text-gray-600">{q.topic} · {q.difficulty}</span>
-                    </div>
-                    <button onClick={() => removeQuestion(q.id)} className="ml-2 text-red-500 hover:text-red-400 shrink-0">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {tab === "darslar" && (
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5 space-y-3">
-              <h2 className="text-white font-semibold">Yangi dars</h2>
-              <input value={lTitle} onChange={(e) => setLTitle(e.target.value)} placeholder="Dars nomi" className={inputCls} />
-              <select value={lTopic} onChange={(e) => setLTopic(e.target.value as Topic)} className={selectCls}>
-                {TOPICS.map((t) => <option key={t}>{t}</option>)}
-              </select>
-              <input value={lDuration} onChange={(e) => setLDuration(e.target.value)} placeholder="Davomiyligi (45 min)" className={inputCls} />
-              <textarea value={lDesc} onChange={(e) => setLDesc(e.target.value)}
-                placeholder="Tavsif" className={cn(inputCls, "h-20 resize-none")} />
-              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={lPremium} onChange={(e) => setLPremium(e.target.checked)} className="accent-brand" />
-                Premium dars
-              </label>
-              <button onClick={addLesson}
-                className="w-full flex items-center justify-center gap-2 bg-brand text-black font-semibold py-2 rounded-lg hover:bg-brand-dark transition-colors text-sm">
-                <Plus size={16} /> Qo&apos;shish
-              </button>
-            </div>
-
-            <div className="bg-dark-card border border-dark-border rounded-xl p-5">
-              <h2 className="text-white font-semibold mb-3">Barcha darslar ({lessons.length})</h2>
-              <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {lessons.map((l) => (
-                  <div key={l.id} className="flex items-center justify-between p-3 bg-dark-hover rounded-lg">
-                    <div>
-                      <p className="text-sm text-white">{l.title}</p>
-                      <span className="text-[10px] text-gray-600">{l.topic} · {l.duration}</span>
-                    </div>
-                    <button onClick={() => removeLesson(l.id)} className="text-red-500 hover:text-red-400">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
