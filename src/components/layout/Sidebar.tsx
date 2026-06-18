@@ -128,14 +128,17 @@ export default function Sidebar() {
       </div>
 
       <div className="p-2 border-t border-dark-border">
+        <Link href="/admin"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-dark-hover cursor-pointer transition-colors mb-1">
+          <Settings size={13} className="text-gray-600" />
+          <span className="text-[12px] text-gray-600 hover:text-gray-400">Admin</span>
+        </Link>
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-dark-hover cursor-pointer transition-colors">
           <div className="w-7 h-7 rounded-full bg-brand/15 border border-brand/30 flex items-center justify-center text-brand text-xs font-bold shrink-0">
             {user?.name?.charAt(0) ?? "U"}
           </div>
           <span className="text-[13px] text-white flex-1 truncate">{user?.name ?? "Foydalanuvchi"}</span>
-          <Settings size={13} className="text-gray-600" />
         </div>
-        <p className="text-center text-[10px] text-gray-700 mt-1">Profilni ko&apos;rish</p>
       </div>
     </div>
   );
