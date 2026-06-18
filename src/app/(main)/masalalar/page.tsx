@@ -13,18 +13,64 @@ type View = "landing" | "category" | "geocat" | "questions";
 type SubGroup = { label: string; topics: string[] };
 type GeoGroup = { label: string; topics: string[]; gradient: string; icon: string; subGroups: SubGroup[] };
 
-const ALGEBRA_TOPICS: string[] = [
-  "Algebra", "Tengsizlik", "Logarifm",
-  "Hosila", "Integral", "Ehtimollik",
-  "Kombinatorika", "Ketma-ketlik",
+const ALGEBRA_GROUPS: SubGroup[] = [
+  {
+    label: "Sonlar (1–5)",
+    topics: [
+      "Natural sonlar va ular ustida amallar",
+      "Bo'linish belgilari, tub va murakkab sonlar",
+      "Sonlarni tub ko'paytuvchilarga ajratish, EKUB va EKUK",
+      "Bo'linuvchanlik. Sonning natural bo'luvchilar soni va yig'indisi",
+      "Qoldiqli bo'lish. Oxirgi raqam",
+    ],
+  },
+  {
+    label: "Kasrlar va sonlar (6–10)",
+    topics: [
+      "Oddiy kasrlar va ular ustida amallar",
+      "O'nli kasrlar, davriy o'nli kasrlar. Haqiqiy sonlar ustida amallar",
+      "Ratsional sonlar va ular ustida amallar",
+      "Nisbat, proporsiya, qism va foiz",
+      "Geometrik shakllar",
+    ],
+  },
+  {
+    label: "Daraja va algebraik ifodalar (11–20)",
+    topics: [
+      "Daraja va uning xossalari, darajali ifodalar (1-qism)",
+      "Daraja va uning xossalari, darajali ifodalar (2-qism)",
+      "O'lchov birliklar. Birhadlar va algebraik ifodalar",
+      "Ko'phadlar va ular ustida amallar",
+      "Qisqa ko'paytirish formulalari (1-qism)",
+      "Qisqa ko'paytirish formulalari (2-qism)",
+      "Ko'paytuvchilarga ajratish (1-qism)",
+      "Ko'paytuvchilarga ajratish (2-qism)",
+      "Algebraik kasrlar (1-qism)",
+      "Algebraik kasrlar (2-qism)",
+    ],
+  },
+  {
+    label: "Tenglamalar va funksiyalar (21–25)",
+    topics: [
+      "Chiziqli tenglamalar",
+      "Chiziqli tenglamalar sistemasi",
+      "Tenglama va tenglamalar sistemasi orqali yechiladigan matnli masalalar",
+      "Chiziqli tengsizlik va tengsizliklar sistemasi",
+      "Chiziqli funksiya, uning grafigi va xossalari",
+    ],
+  },
+  {
+    label: "Ildiz va kvadrat tenglama (26–29)",
+    topics: [
+      "Arifmetik kvadrat ildiz va uning xossalari",
+      "Ildizli ifodalar",
+      "Kvadrat tenglama va uning ildizlari",
+      "Viyet teoremasi",
+    ],
+  },
 ];
 
-const ALGEBRA_GROUPS: SubGroup[] = [
-  { label: "Asosiy algebra", topics: ["Algebra", "Tengsizlik"] },
-  { label: "Funksiyalar va analiz", topics: ["Hosila", "Integral"] },
-  { label: "Ehtimollik va kombinatorika", topics: ["Ehtimollik", "Kombinatorika"] },
-  { label: "Ketma-ketlik va logarifm", topics: ["Ketma-ketlik", "Logarifm"] },
-];
+const ALGEBRA_TOPICS: string[] = ALGEBRA_GROUPS.flatMap(g => g.topics);
 
 const PLANIMETRIYA_SUBGROUPS: SubGroup[] = [
   {
