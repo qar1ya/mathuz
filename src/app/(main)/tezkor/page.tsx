@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
 export default function TezkorPage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default function TezkorPage() {
     setPicked(opt);
     if (opt === q.answer) {
       setScore((s) => s + 1);
-      // coins update will be implemented with real user data
+      if (user) updateProfile({ coins: (user.coins ?? 0) + 2 });
     }
     setTimeout(() => {
       setIndex((i) => i + 1);

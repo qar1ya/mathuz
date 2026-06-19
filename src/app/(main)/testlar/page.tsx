@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth";
 import type { Question } from "@/lib/types";
 import {
   Timer, CheckCircle2, XCircle, ChevronRight, RotateCcw,
@@ -407,6 +408,7 @@ function Results({
 // ── Main ───────────────────────────────────────────────────────────────────
 
 export default function TestlarPage() {
+  const { user, updateProfile } = useAuth();
   const [phase, setPhase] = useState<Phase>("setup");
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -471,8 +473,30 @@ export default function TestlarPage() {
 
   function finish() {
     stopTimer();
-    setElapsed(Math.round((Date.now() - startRef.current) / 1000));
+    const secs = Math.round((Date.now() - startRef.current) / 1000);
+    setElapsed(secs);
     setPhase("result");
+
+    // Save stats to user profile
+    if (user) {
+      const correct = questions.filter((q) => {
+        if (!q.selected) return false;
+        const m = q.answer.match(/(\d+(?:[.,]\d+)?)/);
+        if (!m) return false;
+        return Math.abs(parseFloat(m[1].replace(",", ".")) - parseFloat(q.selected.replace("°", ""))) < 0.1;
+      }).length;
+      const attempted = questions.filter((q) => q.selected !== null).length;
+      const newTotal = (user.totalAttempted ?? 0) + attempted;
+      const newAcc = newTotal > 0
+        ? Math.round(((user.accuracy / 100) * (user.totalAttempted ?? 0) + correct) / newTotal * 100)
+        : 0;
+      const coinsEarned = correct * 2;
+      updateProfile({
+        totalAttempted: newTotal,
+        accuracy: newAcc,
+        coins: (user.coins ?? 0) + coinsEarned,
+      });
+    }
   }
 
   function restart() {

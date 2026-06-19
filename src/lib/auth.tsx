@@ -8,12 +8,14 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  updateProfile: (patch: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signOut: async () => {},
+  updateProfile: async () => {},
 });
 
 function toAppUser(sbUser: SupabaseUser): User {
@@ -52,8 +54,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
+  async function updateProfile(patch: Partial<User>) {
+    // Map User fields → Supabase metadata keys
+    const meta: Record<string, unknown> = {};
+    if (patch.name !== undefined)           meta.name = patch.name;
+    if (patch.streak !== undefined)         meta.streak = patch.streak;
+    if (patch.coins !== undefined)          meta.coins = patch.coins;
+    if (patch.examType !== undefined)       meta.exam_type = patch.examType;
+    if (patch.examDate !== undefined)       meta.exam_date = patch.examDate;
+    if (patch.totalAttempted !== undefined) meta.total_attempted = patch.totalAttempted;
+    if (patch.accuracy !== undefined)       meta.accuracy = patch.accuracy;
+
+    const { data, error } = await supabase.auth.updateUser({ data: meta });
+    if (!error && data.user) {
+      setUser(toAppUser(data.user));
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

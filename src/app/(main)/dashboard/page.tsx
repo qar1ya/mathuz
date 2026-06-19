@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { CheckCircle2, Circle, Bot, ChevronRight, ChevronDown, PlayCircle, Clock, Eye } from "lucide-react";
 import Link from "next/link";
@@ -71,7 +71,24 @@ function ActivityChart() {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
+
+  // Daily streak logic
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    const lastKey = `mathuz_last_visit_${user.id}`;
+    const last = localStorage.getItem(lastKey);
+    if (last === today) return;
+
+    localStorage.setItem(lastKey, today);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const newStreak = last === yesterday ? (user.streak ?? 0) + 1 : 1;
+    if (newStreak !== user.streak) {
+      updateProfile({ streak: newStreak });
+    }
+  }, [user, updateProfile]);
+
   const [tasks] = useState([
     { id: "1", title: "Logarifm mashqlari", done: 16, total: 20, duration: "30 min", completed: false },
     { id: "2", title: "Integral takrorlash", done: 22, total: 30, duration: "45 min", completed: true },
