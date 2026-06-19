@@ -48,7 +48,13 @@ export default function RegisterPage() {
     });
 
     if (err) {
-      setError(err.message.includes("already") ? "Bu email allaqachon ro'yxatdan o'tgan." : "Xatolik yuz berdi. Qaytadan urinib ko'ring.");
+      if (err.message.includes("already") || err.message.includes("registered")) {
+        setError("Bu email allaqachon ro'yxatdan o'tgan.");
+      } else if (err.message.includes("rate")) {
+        setError("Juda ko'p urinish. Biroz kuting.");
+      } else {
+        setError(err.message); // show real error for debugging
+      }
       setLoading(false);
     } else {
       setSuccess(true);
