@@ -67,7 +67,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data, error } = await supabase.auth.updateUser({ data: meta });
     if (!error && data.user) {
-      setUser(toAppUser(data.user));
+      const updated = toAppUser(data.user);
+      setUser(updated);
+      // Sync to public leaderboard
+      await supabase.from("leaderboard").upsert({
+        user_id: data.user.id,
+        name: updated.name,
+        coins: updated.coins,
+        streak: updated.streak,
+        total_attempted: updated.totalAttempted,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
     }
   }
 

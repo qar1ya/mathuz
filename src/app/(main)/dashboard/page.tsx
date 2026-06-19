@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { CheckCircle2, Circle, Bot, ChevronRight, ChevronDown, PlayCircle, Clock, Eye } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import CompetitionSection from "@/components/competition/CompetitionSection";
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data);
@@ -291,7 +292,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Row 4: Tavsiya etilgan darslar */}
+      {/* Row 4: Musobaqa + Leaderboard */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-white font-semibold">🏆 Musobaqa & Reyting</h2>
+        </div>
+        <CompetitionSection />
+      </div>
+
+      {/* Row 5: Tavsiya etilgan darslar */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-white font-semibold">Tavsiya etilgan darslar</h2>
