@@ -1,15 +1,16 @@
 "use client";
-// v2 — 70 parallel savol qo'shildi
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getAllQuestions } from "@/lib/store";
 import type { Question, Difficulty } from "@/lib/types";
 import MathRenderer from "@/components/math/MathRenderer";
-import { ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft, Flag } from "lucide-react";
+import {
+  ArrowLeft, Filter, MoreHorizontal, Play, ChevronRight, ChevronLeft,
+  ChevronDown, Pause, Bookmark, BookmarkCheck, Flag, RotateCcw,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Category = "Algebra" | "Geometriya";
 type View = "landing" | "category" | "geocat" | "questions";
-
 type SubGroup = { label: string; topics: string[] };
 type GeoGroup = { label: string; topics: string[]; gradient: string; icon: string; subGroups: SubGroup[] };
 
@@ -69,7 +70,6 @@ const ALGEBRA_GROUPS: SubGroup[] = [
     ],
   },
 ];
-
 const ALGEBRA_TOPICS: string[] = ALGEBRA_GROUPS.flatMap(g => g.topics);
 
 const PLANIMETRIYA_SUBGROUPS: SubGroup[] = [
@@ -79,7 +79,7 @@ const PLANIMETRIYA_SUBGROUPS: SubGroup[] = [
       "O'tkir va o'tmas burchaklar",
       "Kesishuvchi to'g'ri chiziqlar",
       "Parallel to'g'ri chiziqlar va kesuvchi",
-      "Uchburchak burchaklari",
+      "Uchburchak burchaqlari",
       "Uchburchakning tashqi burchaklari",
     ],
   },
@@ -151,7 +151,7 @@ const PLANIMETRIYA_SUBGROUPS: SubGroup[] = [
       "Doira tenglamasi",
       "Vektorlar",
       "To'g'ri chiziq",
-      "To'g'ri chiziqqa doir masalalarda vektorlardan foydalanish",
+      "To'g'ri chiziqqa doid masalalarda vektorlardan foydalanish",
     ],
   },
 ];
@@ -172,12 +172,14 @@ const GEO_GROUPS: GeoGroup[] = [
     subGroups: [{ label: "Stereometriya", topics: ["Stereometriya"] }],
   },
 ];
-
 const GEO_TOPICS: string[] = GEO_GROUPS.flatMap(g => g.topics);
-
 const DIFFICULTIES: (Difficulty | "Barchasi")[] = ["Barchasi", "Oson", "O'rtacha", "Qiyin"];
-
 const isImageUrl = (s: string) => s.startsWith("/") || s.startsWith("http");
+
+function formatTime(s: number) {
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
 
 const diffBadge = (d: string) =>
   d === "Oson" ? "bg-green-500/15 text-green-400"
@@ -192,10 +194,32 @@ export default function MasalalarPage() {
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [diff, setDiff] = useState<Difficulty | "Barchasi">("Barchasi");
   const [idx, setIdx] = useState(0);
-  const [showSol, setShowSol] = useState(false);
+
+  // question-view state
   const [userAnswer, setUserAnswer] = useState("");
+  const [showSol, setShowSol] = useState(false);
+  const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
+  const [checkedOpt, setCheckedOpt] = useState<string | null>(null);
+  const [crossedOut, setCrossedOut] = useState<Set<string>>(new Set());
+  const [markedSet, setMarkedSet] = useState<Set<string>>(new Set());
+  const [seconds, setSeconds] = useState(0);
+  const [timerPaused, setTimerPaused] = useState(false);
+  const [timerHidden, setTimerHidden] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => { getAllQuestions().then(setAll); }, []);
+
+  useEffect(() => {
+    if (view !== "questions" || timerPaused) return;
+    const t = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [view, timerPaused]);
+
+  const resetQuestion = useCallback(() => {
+    setUserAnswer(""); setShowSol(false);
+    setSelectedOpt(null); setCheckedOpt(null);
+    setCrossedOut(new Set()); setShowExplanation(false); setSeconds(0);
+  }, []);
 
   const catCount = (c: Category) =>
     all.filter(q => (c === "Algebra" ? ALGEBRA_TOPICS : GEO_TOPICS).includes(q.topic)).length;
@@ -211,17 +235,17 @@ export default function MasalalarPage() {
   function openGeoGroup(g: GeoGroup) { setActiveGeoGroup(g); setView("geocat"); setActiveTopic(null); }
   function openTopic(t: string) {
     setActiveTopic(t); setView("questions");
-    setDiff("Barchasi"); setIdx(0); setShowSol(false); setUserAnswer("");
+    setDiff("Barchasi"); setIdx(0); resetQuestion();
   }
   function backToLanding() { setView("landing"); setCat(null); setActiveGeoGroup(null); }
   function backToCategory() { setView("category"); setActiveGeoGroup(null); setActiveTopic(null); }
   function backToGeoCat() { setView("geocat"); setActiveTopic(null); }
 
   function goNext() {
-    if (idx < filtered.length - 1) { setIdx(idx + 1); setShowSol(false); setUserAnswer(""); }
+    if (idx < filtered.length - 1) { setIdx(idx + 1); resetQuestion(); }
   }
   function goPrev() {
-    if (idx > 0) { setIdx(idx - 1); setShowSol(false); setUserAnswer(""); }
+    if (idx > 0) { setIdx(idx - 1); resetQuestion(); }
   }
 
   // ── LANDING ───────────────────────────────────────────────────────────────
@@ -295,7 +319,7 @@ export default function MasalalarPage() {
     );
   }
 
-  // ── GEOMETRIYA CATEGORY (2 cards) ─────────────────────────────────────────
+  // ── GEOMETRIYA CATEGORY ───────────────────────────────────────────────────
   if (view === "category" && cat === "Geometriya") {
     return (
       <div className="p-8">
@@ -366,181 +390,406 @@ export default function MasalalarPage() {
     );
   }
 
-  // ── QUESTIONS (full-screen single question) ───────────────────────────────
+  // ── QUESTIONS VIEW (Preppy/SAT style) ─────────────────────────────────────
   const goBack = cat === "Geometriya" ? backToGeoCat : backToCategory;
+  const toggleMark = () => {
+    if (!active) return;
+    setMarkedSet(prev => {
+      const s = new Set(prev);
+      s.has(active.id) ? s.delete(active.id) : s.add(active.id);
+      return s;
+    });
+  };
+  const isMarked = active ? markedSet.has(active.id) : false;
+
+  const svgFill = (s: string) =>
+    s.replace(/(<svg\b[^>]*?)style="[^"]*"/i, '$1style="display:block;width:100%;"');
+
+  const mainContent = active ? (
+    active.diagramSvg ? (
+      <div className="flex-1 flex overflow-hidden">
+        <div className="w-1/2 border-r border-[#222] flex items-center justify-center bg-[#0a0f18] overflow-auto">
+          {isImageUrl(active.diagramSvg) ? (
+            <img src={active.diagramSvg} alt="diagram" className="w-full object-contain" />
+          ) : (
+            <div className="w-full p-5"
+              dangerouslySetInnerHTML={{ __html: svgFill(active.diagramSvg) }} />
+          )}
+        </div>
+        <div className="w-1/2 overflow-y-auto">
+          <QuestionBody
+            active={active} idx={idx}
+            isMarked={isMarked} onToggleMark={toggleMark}
+            selectedOpt={selectedOpt} setSelectedOpt={setSelectedOpt}
+            checkedOpt={checkedOpt} setCheckedOpt={setCheckedOpt}
+            crossedOut={crossedOut} setCrossedOut={setCrossedOut}
+            userAnswer={userAnswer} setUserAnswer={setUserAnswer}
+            showSol={showSol} setShowSol={setShowSol}
+            showExplanation={showExplanation}
+            resetQuestion={resetQuestion}
+          />
+        </div>
+      </div>
+    ) : (
+      <div className="flex-1 overflow-y-auto flex justify-center">
+        <div className="w-full max-w-2xl">
+          <QuestionBody
+            active={active} idx={idx}
+            isMarked={isMarked} onToggleMark={toggleMark}
+            selectedOpt={selectedOpt} setSelectedOpt={setSelectedOpt}
+            checkedOpt={checkedOpt} setCheckedOpt={setCheckedOpt}
+            crossedOut={crossedOut} setCrossedOut={setCrossedOut}
+            userAnswer={userAnswer} setUserAnswer={setUserAnswer}
+            showSol={showSol} setShowSol={setShowSol}
+            showExplanation={showExplanation}
+            resetQuestion={resetQuestion}
+          />
+        </div>
+      </div>
+    )
+  ) : (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-gray-600 text-sm">Bu mavzuda hali masala yo&apos;q</p>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-full bg-dark-bg">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-dark-border shrink-0">
-        <button onClick={goBack} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
-          <ArrowLeft size={16} /> Orqaga
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="text-gray-500 text-sm font-medium">{activeTopic}</span>
-          <span className="text-xs bg-dark-card border border-dark-border px-2.5 py-1 rounded-full text-gray-500">
-            {filtered.length} ta masala
+    <div className="flex flex-col h-full bg-[#0c0c0c]">
+
+      {/* ── TOP BAR ─────────────────────────────────────────────────── */}
+      <div className="shrink-0 flex items-center justify-between px-5 py-2 border-b border-[#1e1e1e]">
+        {/* Left */}
+        <div className="flex items-center gap-3 min-w-[220px]">
+          <button onClick={goBack}
+            className="flex items-center gap-1 text-gray-300 hover:text-white text-sm font-medium transition-colors">
+            <ChevronLeft size={16} /> Go back
+          </button>
+          <div className="w-px h-4 bg-[#333]" />
+          <button className="flex items-center gap-1.5 text-gray-400 hover:text-white text-xs border border-[#2a2a2a] hover:border-[#444] rounded-md px-2.5 py-1.5 transition-colors max-w-[130px]">
+            <span className="truncate">{activeTopic}</span>
+            <ChevronDown size={12} className="shrink-0" />
+          </button>
+        </div>
+
+        {/* Center — timer */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-white font-mono font-bold text-xl tracking-widest leading-none">
+            {timerHidden ? "••:••" : formatTime(seconds)}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {DIFFICULTIES.map(d => (
-            <button key={d} onClick={() => { setDiff(d); setIdx(0); setShowSol(false); setUserAnswer(""); }}
-              className={cn("text-xs px-3 py-1.5 rounded-full transition-colors",
-                diff === d ? "bg-brand text-black font-semibold" : "text-gray-500 hover:text-white bg-dark-card border border-dark-border")}>
-              {d === "Barchasi" ? "Barchasi" : d}
+          <div className="flex items-center gap-3">
+            <button onClick={() => setTimerPaused(p => !p)}
+              className="text-gray-500 hover:text-white transition-colors">
+              {timerPaused ? <Play size={10} /> : <Pause size={10} />}
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main */}
-      <div className="flex-1 flex overflow-hidden">
-        {active ? (
-          active.diagramSvg ? (
-            /* ── TWO-PANEL: diagram + question ── */
-            <>
-              <div className="w-1/2 border-r border-dark-border flex items-center justify-center bg-[#0b1520] p-6">
-                {isImageUrl(active.diagramSvg) ? (
-                  <img src={active.diagramSvg} alt="diagram" className="max-w-full max-h-full object-contain rounded-lg" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center" dangerouslySetInnerHTML={{ __html: active.diagramSvg }} />
-                )}
-              </div>
-              <div className="w-1/2 flex flex-col overflow-y-auto">
-                <QuestionPanel
-                  active={active} idx={idx}
-                  userAnswer={userAnswer} setUserAnswer={setUserAnswer}
-                  showSol={showSol} setShowSol={setShowSol}
-                />
-              </div>
-            </>
-          ) : (
-            /* ── SINGLE-PANEL: text only, centered ── */
-            <div className="flex-1 overflow-y-auto flex justify-center">
-              <div className="w-full max-w-2xl">
-                <QuestionPanel
-                  active={active} idx={idx}
-                  userAnswer={userAnswer} setUserAnswer={setUserAnswer}
-                  showSol={showSol} setShowSol={setShowSol}
-                />
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-600 text-sm">Bu mavzuda hali masala yo&apos;q</p>
+            <button onClick={() => setTimerHidden(h => !h)}
+              className="text-gray-500 hover:text-white text-[10px] transition-colors">
+              {timerHidden ? "Show" : "Hide"}
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* Bottom navigation bar */}
-      <div className="shrink-0 border-t border-dark-border px-6 py-4 flex items-center justify-between bg-dark-sidebar">
-        <button onClick={goPrev} disabled={idx === 0}
-          className={cn("flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-medium transition-all",
-            idx === 0
-              ? "border-dark-border text-gray-700 cursor-not-allowed"
-              : "border-dark-border text-gray-300 hover:border-gray-500 hover:text-white bg-dark-card")}>
-          <ChevronLeft size={16} /> Oldingi
-        </button>
-
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400 text-sm font-medium">{filtered.length > 0 ? idx + 1 : 0}</span>
-          <span className="text-gray-600 text-sm">/</span>
-          <span className="text-gray-500 text-sm">{filtered.length}</span>
         </div>
 
-        <button onClick={goNext} disabled={idx >= filtered.length - 1}
-          className={cn("flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all",
+        {/* Right */}
+        <div className="flex items-center gap-4 min-w-[220px] justify-end">
+          <button className="flex flex-col items-center gap-0.5 text-gray-500 hover:text-white transition-colors">
+            <span className="text-base leading-none">🖩</span>
+            <span className="text-[10px]">Calculator</span>
+          </button>
+          <button className="flex flex-col items-center gap-0.5 text-gray-500 hover:text-white transition-colors">
+            <span className="text-base leading-none">📄</span>
+            <span className="text-[10px]">Reference</span>
+          </button>
+          <button className="flex flex-col items-center gap-0.5 text-gray-500 hover:text-white transition-colors">
+            <MoreHorizontal size={16} />
+            <span className="text-[10px]">More</span>
+          </button>
+          <div className="w-px h-5 bg-[#333]" />
+          <span className="text-orange-400 font-bold text-sm">🔥 {idx + 1}</span>
+          <span className="text-brand font-bold text-lg leading-none">∞</span>
+        </div>
+      </div>
+
+      {/* ── DIFFICULTY FILTER ───────────────────────────────────────── */}
+      <div className="shrink-0 flex items-center gap-2 px-5 py-2 border-b border-[#181818]">
+        {DIFFICULTIES.map(d => (
+          <button key={d}
+            onClick={() => { setDiff(d); setIdx(0); resetQuestion(); }}
+            className={cn("text-xs px-3 py-1 rounded-full transition-colors",
+              diff === d
+                ? "bg-brand text-black font-semibold"
+                : "text-gray-600 hover:text-white bg-[#1a1a1a] border border-[#2a2a2a]")}>
+            {d}
+          </button>
+        ))}
+        <span className="ml-auto text-gray-600 text-xs">{filtered.length} ta masala</span>
+      </div>
+
+      {/* ── MAIN ────────────────────────────────────────────────────── */}
+      {mainContent}
+
+      {/* ── BOTTOM BAR ──────────────────────────────────────────────── */}
+      <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-[#1e1e1e] bg-[#0c0c0c]">
+        {/* Left: question picker */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goPrev}
+            disabled={idx === 0}
+            className={cn("w-8 h-8 rounded-lg border flex items-center justify-center transition-colors",
+              idx === 0 ? "border-[#1e1e1e] text-gray-700 cursor-not-allowed" : "border-[#333] text-gray-400 hover:border-[#555] hover:text-white"
+            )}>
+            <ChevronLeft size={14} />
+          </button>
+          <button className="flex items-center gap-2 border border-[#333] hover:border-[#555] rounded-lg px-3 py-2 text-white text-sm transition-colors font-medium">
+            {filtered.length > 0 ? idx + 1 : 0} of {filtered.length}
+            <ChevronDown size={13} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Center: actions */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600 hover:text-gray-400 text-base cursor-default select-none">ⓘ</span>
+          <button className="flex items-center gap-2 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+            🤖 AI Yordam
+          </button>
+          {(checkedOpt !== null || showSol) && (
+            <button
+              onClick={resetQuestion}
+              className="flex items-center gap-1.5 bg-[#2a1a2a] hover:bg-[#3a2a3a] text-pink-300 px-4 py-2 rounded-full text-sm font-medium transition-colors border border-pink-900/40">
+              <RotateCcw size={13} /> Qayta urinish
+            </button>
+          )}
+          <button
+            onClick={() => setShowExplanation(e => !e)}
+            className={cn(
+              "flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg transition-colors",
+              showExplanation ? "text-brand bg-brand/10" : "text-gray-500 hover:text-white"
+            )}>
+            ≡ Yechim
+          </button>
+        </div>
+
+        {/* Right: next */}
+        <button
+          onClick={goNext}
+          disabled={idx >= filtered.length - 1}
+          className={cn(
+            "flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-all",
             idx >= filtered.length - 1
-              ? "bg-dark-card border border-dark-border text-gray-700 cursor-not-allowed"
-              : "bg-brand text-black hover:bg-brand/90")}>
-          Keyingi <ChevronRight size={16} />
+              ? "text-gray-700 cursor-not-allowed"
+              : "text-white hover:text-brand"
+          )}>
+          Keyingi <ChevronRight size={15} />
         </button>
       </div>
     </div>
   );
 }
 
-function QuestionPanel({
-  active, idx, userAnswer, setUserAnswer, showSol, setShowSol,
+// ── QUESTION BODY ────────────────────────────────────────────────────────────
+function QuestionBody({
+  active, idx, isMarked, onToggleMark,
+  selectedOpt, setSelectedOpt, checkedOpt, setCheckedOpt,
+  crossedOut, setCrossedOut,
+  userAnswer, setUserAnswer, showSol, setShowSol,
+  showExplanation, resetQuestion,
 }: {
   active: Question; idx: number;
+  isMarked: boolean; onToggleMark: () => void;
+  selectedOpt: string | null; setSelectedOpt: (v: string | null) => void;
+  checkedOpt: string | null; setCheckedOpt: (v: string | null) => void;
+  crossedOut: Set<string>; setCrossedOut: (v: Set<string>) => void;
   userAnswer: string; setUserAnswer: (v: string) => void;
   showSol: boolean; setShowSol: (v: boolean) => void;
+  showExplanation: boolean; resetQuestion: () => void;
 }) {
+  const letters = ["A", "B", "C", "D"];
+  const isChecked = checkedOpt !== null;
+
+  const isOptCorrect = (letter: string, opt: string) =>
+    active.answer === letter ||
+    active.answer === opt ||
+    active.answer.startsWith(letter + ".");
+
   return (
-    <div className="p-8 flex flex-col flex-1 min-h-full">
-      {/* Badges */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <div className="w-8 h-8 rounded-lg bg-dark-card border border-dark-border flex items-center justify-center text-white text-sm font-bold shrink-0">
+    <div className="p-6 pb-8">
+      {/* Question header bar */}
+      <div className="flex items-center bg-[#161616] border border-[#262626] rounded-xl px-4 py-2.5 mb-5 gap-3">
+        <div className="w-7 h-7 rounded-md bg-[#202020] border border-[#383838] flex items-center justify-center text-white text-sm font-bold shrink-0">
           {idx + 1}
         </div>
-        <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", diffBadge(active.difficulty))}>
-          {active.difficulty}
-        </span>
-        {active.examType.map(e => (
-          <span key={e} className="text-xs bg-brand/10 text-brand px-2.5 py-1 rounded-full">{e}</span>
-        ))}
-        <button className="ml-auto flex items-center gap-1.5 text-gray-500 hover:text-yellow-400 transition-colors text-xs">
-          <Flag size={13} /> Belgilash
+        <button onClick={onToggleMark}
+          className={cn(
+            "flex items-center gap-1.5 text-[13px] font-medium transition-colors",
+            isMarked ? "text-yellow-400" : "text-gray-500 hover:text-gray-300"
+          )}>
+          {isMarked
+            ? <BookmarkCheck size={14} className="text-yellow-400" />
+            : <Bookmark size={14} />}
+          Mark for Review
         </button>
+        <div className="ml-auto flex items-center gap-3">
+          <button className="text-gray-600 hover:text-white text-[12px] flex items-center gap-1 transition-colors">
+            <Flag size={12} /> Report
+          </button>
+          <div className="w-6 h-6 rounded-full border border-[#444] flex items-center justify-center text-gray-500 text-[10px] font-bold select-none">
+            ©
+          </div>
+        </div>
       </div>
 
-      {/* Savol matni */}
-      <div className="text-white text-[15px] leading-relaxed mb-8">
+      {/* Question text */}
+      <div className="text-white text-[15px] leading-[1.75] mb-7">
         <MathRenderer formula={active.text} displayMode />
       </div>
 
-      {/* Javob maydoni */}
-      <div className="mt-auto space-y-3">
-        {!showSol ? (
-          <>
-            <input
-              type="text"
-              value={userAnswer}
-              onChange={e => setUserAnswer(e.target.value)}
-              placeholder="Javobingizni yozing..."
-              className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-600 text-sm focus:outline-none focus:border-brand transition-colors"
-            />
-            <button
-              onClick={() => setShowSol(true)}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-dark-card border border-dark-border rounded-xl text-gray-400 hover:border-brand hover:text-brand transition-all text-sm font-medium">
-              👁 Javobni ko&apos;rish
-            </button>
-          </>
-        ) : (
-          <div className="bg-dark-card border border-brand/20 rounded-2xl p-5 space-y-4">
-            {userAnswer.trim() && (
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Sizning javobingiz</p>
-                <p className="text-gray-300 text-lg">{userAnswer}</p>
+      {/* ── MCQ ──────────────────────────────────────────────────────── */}
+      {active.options.length > 0 ? (
+        <div className="space-y-2.5">
+          {active.options.map((opt, i) => {
+            const letter = letters[i];
+            const isSel = selectedOpt === letter;
+            const isCrossed = crossedOut.has(letter);
+            const correct = isOptCorrect(letter, opt);
+            const wrong = isChecked && checkedOpt === letter && !correct;
+            const revealCorrect = isChecked && correct;
+            const neutral = isChecked && !correct && checkedOpt !== letter;
+
+            return (
+              <div key={letter} className="flex items-center gap-2">
+                <button
+                  disabled={isChecked || isCrossed}
+                  onClick={() => !isChecked && setSelectedOpt(isSel ? null : letter)}
+                  className={cn(
+                    "flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all",
+                    isCrossed && "opacity-25 cursor-not-allowed",
+                    !isChecked && isSel && "border-brand bg-brand/5",
+                    !isChecked && !isSel && !isCrossed && "border-[#252525] bg-[#141414] hover:border-[#3a3a3a]",
+                    wrong && "border-red-600 bg-red-950/50",
+                    revealCorrect && "border-green-500 bg-green-950/40",
+                    neutral && "border-[#252525] bg-[#141414] opacity-50",
+                  )}>
+                  {/* Letter / icon */}
+                  <div className={cn(
+                    "w-7 h-7 rounded-full border-2 flex items-center justify-center text-[13px] font-bold shrink-0 transition-all",
+                    wrong ? "bg-red-500 border-red-500 text-white" :
+                    revealCorrect ? "bg-green-500 border-green-500 text-white" :
+                    isSel ? "border-brand text-brand" :
+                    "border-[#444] text-gray-500"
+                  )}>
+                    {wrong ? "✕" : revealCorrect ? "✓" : letter}
+                  </div>
+
+                  {/* Option text */}
+                  <span className={cn(
+                    "flex-1 text-[14px] leading-snug",
+                    isCrossed ? "line-through text-gray-700" :
+                    wrong ? "text-red-200" :
+                    revealCorrect ? "text-green-200" :
+                    "text-gray-100"
+                  )}>
+                    <MathRenderer formula={opt} />
+                  </span>
+
+                  {/* Check button (selected, not yet submitted) */}
+                  {isSel && !isChecked && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setCheckedOpt(letter); }}
+                      className="shrink-0 text-[12px] bg-brand text-black font-bold px-3 py-1 rounded-full hover:opacity-85 transition-opacity">
+                      Check
+                    </button>
+                  )}
+
+                  {/* Explain button (wrong answer revealed) */}
+                  {wrong && (
+                    <button className="shrink-0 text-[12px] border border-[#444] text-gray-400 px-3 py-1 rounded-full hover:bg-[#222] transition-colors">
+                      Explain
+                    </button>
+                  )}
+                </button>
+
+                {/* Cross-out circle */}
+                <button
+                  disabled={isChecked}
+                  onClick={() => {
+                    const s = new Set(crossedOut);
+                    s.has(letter) ? s.delete(letter) : s.add(letter);
+                    setCrossedOut(s);
+                  }}
+                  className={cn(
+                    "w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors",
+                    isCrossed
+                      ? "border-gray-400 text-gray-400"
+                      : "border-[#333] text-[#333] hover:border-[#666] hover:text-[#666]",
+                    isChecked && "opacity-20 cursor-not-allowed"
+                  )}>
+                  {letter}
+                </button>
               </div>
-            )}
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">To&apos;g&apos;ri javob</p>
-              <p className="text-brand text-3xl font-bold">
-                <MathRenderer formula={active.answer} />
-              </p>
+            );
+          })}
+
+          {/* Explanation panel for MCQ */}
+          {showExplanation && active.solution && isChecked && (
+            <div className="mt-4 border border-[#2a2a2a] rounded-xl overflow-hidden">
+              <div className="px-5 py-4 bg-[#111]">
+                <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
+                <div className="text-gray-300 text-sm leading-relaxed">
+                  <MathRenderer formula={active.solution} displayMode />
+                </div>
+              </div>
             </div>
-            {active.solution && (
-              <>
-                <div className="h-px bg-dark-border" />
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Yechim</p>
+          )}
+        </div>
+      ) : (
+        /* ── FREE TEXT ─────────────────────────────────────────────── */
+        <div className="space-y-3">
+          {!showSol ? (
+            <>
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={e => setUserAnswer(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && userAnswer.trim() && setShowSol(true)}
+                placeholder="Javobingizni kiriting..."
+                className="w-full px-4 py-3 bg-[#141414] border-2 border-[#252525] focus:border-brand rounded-xl text-white placeholder-gray-700 text-sm outline-none transition-colors"
+              />
+              <button
+                onClick={() => userAnswer.trim() && setShowSol(true)}
+                disabled={!userAnswer.trim()}
+                className={cn(
+                  "px-6 py-2.5 rounded-full text-sm font-bold transition-all",
+                  userAnswer.trim()
+                    ? "bg-brand text-black hover:opacity-85"
+                    : "bg-[#1a1a1a] text-gray-700 cursor-not-allowed"
+                )}>
+                Check
+              </button>
+            </>
+          ) : (
+            <div className="border-2 border-[#2a2a2a] rounded-2xl overflow-hidden">
+              {userAnswer.trim() && (
+                <div className="px-5 py-4 border-b border-[#222]">
+                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1.5">Sizning javobingiz</p>
+                  <p className="text-gray-300 text-sm">{userAnswer}</p>
+                </div>
+              )}
+              <div className="px-5 py-4 bg-[#0c1a0c]">
+                <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1.5">To&apos;g&apos;ri javob</p>
+                <div className="text-green-400 text-2xl font-bold">
+                  <MathRenderer formula={active.answer} />
+                </div>
+              </div>
+              {active.solution && (
+                <div className="px-5 py-4 border-t border-[#222] bg-[#111]">
+                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
                   <div className="text-gray-300 text-sm leading-relaxed">
                     <MathRenderer formula={active.solution} displayMode />
                   </div>
                 </div>
-              </>
-            )}
-            <button
-              onClick={() => setShowSol(false)}
-              className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-              ▲ Yopish
-            </button>
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

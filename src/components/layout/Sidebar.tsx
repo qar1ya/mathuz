@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Bot, Calendar, PlayCircle, BarChart2,
   BookOpen, Zap, FileText, Bookmark, Crown, Settings,
-  ChevronDown, ClipboardList, Sigma, Check,
+  ChevronDown, ClipboardList, Sigma, Check, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -61,7 +61,13 @@ function NavItem({ href, icon: Icon, label, badge, isNew, isActive }: NavItemPro
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/login");
+  }
 
   return (
     <div className="w-56 h-screen bg-dark-sidebar border-r border-dark-border flex flex-col shrink-0">
@@ -133,11 +139,15 @@ export default function Sidebar() {
           <Settings size={13} className="text-gray-600" />
           <span className="text-[12px] text-gray-600 hover:text-gray-400">Admin</span>
         </Link>
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-dark-hover cursor-pointer transition-colors">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-dark-hover transition-colors">
           <div className="w-7 h-7 rounded-full bg-brand/15 border border-brand/30 flex items-center justify-center text-brand text-xs font-bold shrink-0">
-            {user?.name?.charAt(0) ?? "U"}
+            {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
           <span className="text-[13px] text-white flex-1 truncate">{user?.name ?? "Foydalanuvchi"}</span>
+          <button onClick={handleSignOut} title="Chiqish"
+            className="text-gray-600 hover:text-red-400 transition-colors shrink-0">
+            <LogOut size={13} />
+          </button>
         </div>
       </div>
     </div>
