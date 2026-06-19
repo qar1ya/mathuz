@@ -34,10 +34,11 @@ interface NavItemProps {
   isActive: boolean;
 }
 
-function NavItem({ href, icon: Icon, label, badge, isNew, isActive }: NavItemProps) {
+function NavItem({ href, icon: Icon, label, badge, isNew, isActive, onClick }: NavItemProps & { onClick?: () => void }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
         isActive ? "bg-brand/10 text-brand" : "text-gray-400 hover:bg-dark-hover hover:text-white"
@@ -59,7 +60,7 @@ function NavItem({ href, icon: Icon, label, badge, isNew, isActive }: NavItemPro
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -90,7 +91,7 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-3">
         <div className="space-y-0.5">
           {mainItems.map((item) => (
-            <NavItem key={item.href} {...item} isActive={pathname === item.href} />
+            <NavItem key={item.href} {...item} isActive={pathname === item.href} onClick={onClose} />
           ))}
         </div>
         <div>
@@ -99,7 +100,7 @@ export default function Sidebar() {
           </p>
           <div className="space-y-0.5 mt-1">
             {practiceItems.map((item) => (
-              <NavItem key={item.href} {...item} isActive={pathname === item.href} />
+              <NavItem key={item.href} {...item} isActive={pathname === item.href} onClick={onClose} />
             ))}
           </div>
         </div>

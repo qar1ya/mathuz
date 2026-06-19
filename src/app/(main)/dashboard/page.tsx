@@ -124,7 +124,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 1: DTM Banner + Level Card */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: "2fr 1fr" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="rounded-xl p-5 relative overflow-hidden border border-brand/20"
           style={{ background: "linear-gradient(135deg, #0d2018 0%, #111113 65%)" }}>
           <div className="absolute right-28 top-3 text-brand/10 font-bold select-none pointer-events-none" style={{ fontSize: 72 }}>π</div>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 2: Stat Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statCards.map(({ label, value, sub, subColor, data, sparkColor }) => (
           <div key={label} className="bg-dark-card border border-dark-border rounded-xl p-4">
             <div className="flex items-start justify-between gap-2">
@@ -214,7 +214,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 3: Reja + AI + Progress */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-dark-card border border-dark-border rounded-xl p-4 flex flex-col">
           <h2 className="text-white font-semibold mb-3">Bugungi reja</h2>
           <div className="space-y-3 flex-1">
@@ -299,7 +299,7 @@ export default function DashboardPage() {
             Tavsifini ko&apos;rish <ChevronRight size={13} />
           </Link>
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {lessons.map((l) => (
             <div key={l.title}
               className="bg-dark-card border border-dark-border rounded-xl overflow-hidden hover:border-brand/25 transition-colors group cursor-pointer">
