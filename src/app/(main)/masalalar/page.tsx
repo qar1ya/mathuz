@@ -728,13 +728,38 @@ function QuestionBody({
           })}
 
           {/* Explanation panel for MCQ */}
-          {showExplanation && active.solution && isChecked && (
+          {showExplanation && isChecked && (
             <div className="mt-4 border border-[#2a2a2a] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 bg-[#111]">
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
-                <div className="text-gray-300 text-sm leading-relaxed">
-                  <MathRenderer formula={active.solution} displayMode />
+              <div className="px-5 py-4 bg-[#111] space-y-3">
+                {/* Always show correct answer */}
+                <div>
+                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">To&apos;g&apos;ri javob</p>
+                  <div className="flex flex-col gap-1">
+                    {active.options.map((opt, i) => {
+                      const letter = letters[i];
+                      if (!isOptCorrect(letter, opt)) return null;
+                      return (
+                        <div key={letter} className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {letter}
+                          </span>
+                          <span className="text-green-300 text-sm">
+                            <MathRenderer formula={opt} />
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+                {/* Show solution text if available */}
+                {active.solution && (
+                  <div>
+                    <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
+                    <div className="text-gray-300 text-sm leading-relaxed">
+                      <MathRenderer formula={active.solution} displayMode />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
