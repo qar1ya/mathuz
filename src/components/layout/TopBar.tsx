@@ -1,9 +1,11 @@
 "use client";
 import { useAuth } from "@/lib/auth";
-import { Flame, Coins, Bell, Search, Menu } from "lucide-react";
+import { useTheme } from "@/lib/theme";
+import { Flame, Coins, Bell, Search, Menu, Sun, Moon } from "lucide-react";
 
 export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user } = useAuth();
+  const { theme, toggle } = useTheme();
 
   return (
     <div className="h-12 border-b border-dark-border bg-dark-bg flex items-center px-4 gap-3 shrink-0">
@@ -29,6 +31,15 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <button
+          onClick={toggle}
+          title={theme === "dark" ? "Yorug' rejim" : "Qoʻngʻir rejim"}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-hover transition-colors border border-dark-border"
+        >
+          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
         <button className="relative text-gray-500 hover:text-white transition-colors">
           <Bell size={17} />
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand rounded-full text-[8px] font-bold text-black flex items-center justify-center">
@@ -38,13 +49,13 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
 
         <div className="flex items-center gap-1 bg-dark-card border border-dark-border rounded-lg px-2 py-1.5">
           <Flame size={13} className="text-orange-400" />
-          <span className="text-white text-xs font-semibold">{user?.streak ?? 0}</span>
+          <span className="text-xs font-semibold">{user?.streak ?? 0}</span>
           <span className="text-gray-600 text-xs hidden sm:inline">kun</span>
         </div>
 
         <div className="flex items-center gap-1 bg-dark-card border border-dark-border rounded-lg px-2 py-1.5">
           <Coins size={13} className="text-yellow-400" />
-          <span className="text-white text-xs font-semibold">{user?.coins ?? 0}</span>
+          <span className="text-xs font-semibold">{user?.coins ?? 0}</span>
         </div>
       </div>
     </div>
