@@ -22,7 +22,13 @@ export default function LoginPage() {
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
 
     if (err) {
-      setError("Email yoki parol noto'g'ri.");
+      if (err.message.includes("Email not confirmed")) {
+        setError("Email tasdiqlanmagan. Supabase → Authentication → Providers → Email → 'Confirm email' ni o'chiring.");
+      } else if (err.message.includes("Invalid login credentials")) {
+        setError("Email yoki parol noto'g'ri.");
+      } else {
+        setError(err.message);
+      }
       setLoading(false);
     } else {
       router.push("/dashboard");
