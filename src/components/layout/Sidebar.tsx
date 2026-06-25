@@ -115,24 +115,34 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Premium section */}
-      <div className="mx-2 mb-2 bg-brand/5 border border-brand/20 rounded-xl p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Crown size={14} className="text-yellow-400" />
-          <span className="text-white text-xs font-semibold">Premium ga o&apos;ting</span>
+      {user?.isPremium ? (
+        <div className="mx-2 mb-2 bg-brand/5 border border-brand/20 rounded-xl p-3">
+          <div className="flex items-center gap-2">
+            <Crown size={14} className="text-yellow-400" />
+            <span className="text-brand text-xs font-semibold">Premium foydalanuvchi</span>
+          </div>
+          <p className="text-gray-500 text-[11px] mt-1">Barcha imkoniyatlar ochiq ✓</p>
         </div>
-        <div className="space-y-1.5 mb-3">
-          {["Cheksiz AI yordamchi", "Batafsil tahlillar", "Ekskluziv kurslar"].map((f) => (
-            <div key={f} className="flex items-center gap-1.5">
-              <Check size={11} className="text-brand shrink-0" />
-              <span className="text-gray-400 text-[11px]">{f}</span>
-            </div>
-          ))}
+      ) : (
+        <div className="mx-2 mb-2 bg-brand/5 border border-brand/20 rounded-xl p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Crown size={14} className="text-yellow-400" />
+            <span className="text-white text-xs font-semibold">Premium ga o&apos;ting</span>
+          </div>
+          <div className="space-y-1.5 mb-3">
+            {["Cheksiz AI yordamchi", "Batafsil tahlillar", "Ekskluziv kurslar"].map((f) => (
+              <div key={f} className="flex items-center gap-1.5">
+                <Check size={11} className="text-brand shrink-0" />
+                <span className="text-gray-400 text-[11px]">{f}</span>
+              </div>
+            ))}
+          </div>
+          <Link href="/premium"
+            className="block w-full text-center py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold rounded-lg transition-colors">
+            Premium olish
+          </Link>
         </div>
-        <Link href="/premium"
-          className="block w-full text-center py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold rounded-lg transition-colors">
-          Premium olish
-        </Link>
-      </div>
+      )}
 
       <div className="p-2 border-t border-dark-border">
         <Link href="/admin"

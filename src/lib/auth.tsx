@@ -29,6 +29,7 @@ function toAppUser(sbUser: SupabaseUser): User {
     examDate: m.exam_date ?? "2026-08-22",
     totalAttempted: m.total_attempted ?? 0,
     accuracy: m.accuracy ?? 0,
+    isPremium: m.is_premium === true,
   };
 }
 
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (patch.examDate !== undefined)       meta.exam_date = patch.examDate;
     if (patch.totalAttempted !== undefined) meta.total_attempted = patch.totalAttempted;
     if (patch.accuracy !== undefined)       meta.accuracy = patch.accuracy;
+    if (patch.isPremium !== undefined)      meta.is_premium = patch.isPremium;
 
     const { data, error } = await supabase.auth.updateUser({ data: meta });
     if (!error && data.user) {

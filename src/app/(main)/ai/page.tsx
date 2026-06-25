@@ -1,7 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, Loader2 } from "lucide-react";
+import { Send, Bot, Loader2, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { useDailyLimit } from "@/lib/useDailyLimit";
+import PremiumGate from "@/components/premium/PremiumGate";
+
+const FREE_LIMIT = 5;
 
 interface Message {
   role: "user" | "assistant";
@@ -9,6 +14,11 @@ interface Message {
 }
 
 export default function AiPage() {
+  const { user } = useAuth();
+  const { remaining, showGate, setShowGate, increment } = useDailyLimit(
+    "ai", FREE_LIMIT, user?.isPremium ?? false
+  );
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -27,6 +37,7 @@ export default function AiPage() {
   async function send() {
     const text = input.trim();
     if (!text || loading) return;
+    if (!increment()) return; // limit tugadi → gate ko'rsatiladi
 
     const userMsg: Message = { role: "user", content: text };
     const history = [...messages, userMsg];
@@ -78,6 +89,14 @@ export default function AiPage() {
 
   return (
     <div className="flex flex-col h-full">
+      {showGate && (
+        <PremiumGate
+          title="AI Yordamchi limiti tugadi"
+          desc={`Bepul rejimda kuniga ${FREE_LIMIT} ta savol. Premium bilan cheksiz!`}
+          onClose={() => setShowGate(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="px-6 py-4 border-b border-dark-border">
         <div className="flex items-center gap-2">
@@ -87,9 +106,16 @@ export default function AiPage() {
             Claude
           </span>
         </div>
-        <p className="text-gray-500 text-xs mt-0.5">
-          Matematika savollaringizni so&apos;rang
-        </p>
+        <div className="flex items-center justify-between mt-0.5">
+          <p className="text-gray-500 text-xs">Matematika savollaringizni so&apos;rang</p>
+          {!user?.isPremium && (
+            <span className="text-[10px] text-gray-500">
+              {remaining === 0
+                ? <span className="text-red-400 flex items-center gap-1"><Crown size={10} /> Limit tugadi</span>
+                : `${remaining}/${FREE_LIMIT} qoldi`}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

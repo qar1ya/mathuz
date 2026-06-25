@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import type { Question } from "@/lib/types";
+import { useDailyLimit } from "@/lib/useDailyLimit";
+import PremiumGate from "@/components/premium/PremiumGate";
 import {
   Timer, CheckCircle2, XCircle, ChevronRight, RotateCcw,
   Trophy, BookOpen, Play, ChevronLeft, Flag
@@ -409,6 +411,9 @@ function Results({
 
 export default function TestlarPage() {
   const { user, updateProfile } = useAuth();
+  const { remaining, showGate, setShowGate, increment } = useDailyLimit(
+    "tests", 2, user?.isPremium ?? false
+  );
   const [phase, setPhase] = useState<Phase>("setup");
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -516,7 +521,21 @@ export default function TestlarPage() {
     );
   }
 
-  if (phase === "setup") return <Setup onStart={startTest} />;
+  if (phase === "setup") return (
+    <>
+      {showGate && (
+        <PremiumGate
+          title="Test limiti tugadi"
+          desc="Bepul rejimda kuniga 2 ta test. Premium bilan cheksiz!"
+          onClose={() => setShowGate(false)}
+        />
+      )}
+      <Setup onStart={(t,c,d) => {
+        if (!increment()) return;
+        startTest(t,c,d);
+      }} />
+    </>
+  );
   if (phase === "result") return <Results questions={questions} elapsed={elapsed} onRestart={restart} />;
   return (
     <TestScreen

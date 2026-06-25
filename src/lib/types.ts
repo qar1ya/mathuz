@@ -34,6 +34,7 @@ export interface User {
   examDate: string;
   totalAttempted: number;
   accuracy: number;
+  isPremium: boolean;
 }
 
 export interface StudyTask {
