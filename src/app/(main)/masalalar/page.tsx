@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { getAllQuestions } from "@/lib/store";
 import type { Question, Difficulty } from "@/lib/types";
 import MathRenderer from "@/components/math/MathRenderer";
@@ -8,6 +8,53 @@ import {
   ChevronDown, Pause, Bookmark, BookmarkCheck, Flag, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ── Yechim qadamlarini ajratish ─────────────────────────────────────────────
+function parseSolutionSteps(sol: string): string[] {
+  const parts = sol.split(/\\ \\ (?=\d+\))/);
+  if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
+  const parts2 = sol.split(/\s{2,}(?=\d+\))/);
+  if (parts2.length > 1) return parts2.map(p => p.trim()).filter(Boolean);
+  return [sol];
+}
+
+// ── Chat-style solution panel (tashqarida — scroll reset bo'lmasin) ─────────
+const SolutionChat = memo(function SolutionChat({ sol }: { sol: string }) {
+  const steps = parseSolutionSteps(sol);
+  const isSingleBlock = steps.length <= 1;
+  return (
+    <div className="flex-1 min-h-0 flex flex-col bg-[#0a0c10] border-l border-[#1e1e1e]">
+      <div className="px-4 py-3 border-b border-[#1e1e1e] flex items-center gap-2 shrink-0">
+        <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+        <span className="text-brand text-xs font-semibold uppercase tracking-widest">Yechim</span>
+        <span className="text-gray-600 text-xs ml-auto">{steps.length} qadam</span>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
+        {isSingleBlock ? (
+          <div className="bg-[#111318] border border-[#2a2a2e] rounded-2xl px-4 py-3 text-sm text-gray-200">
+            <MathRenderer formula={sol} displayMode />
+          </div>
+        ) : (
+          steps.map((step, i) => {
+            const clean = step.replace(/^\d+\)\s*\\?\s*/, "");
+            return (
+              <div key={i} className="flex gap-2 items-start group">
+                <div className="w-6 h-6 rounded-full bg-brand/20 border border-brand/30 text-brand text-[10px] font-black flex items-center justify-center shrink-0 mt-1">
+                  {i + 1}
+                </div>
+                <div className="flex-1 bg-[#111318] border border-[#2a2a2e] group-hover:border-[#3a3a3e] rounded-2xl rounded-tl-sm px-3 py-2.5 transition-colors">
+                  <div className="text-gray-200 text-sm leading-relaxed">
+                    <MathRenderer formula={clean} displayMode />
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+});
 
 type Category = "Algebra" | "Geometriya" | "Skanaviy";
 type View = "landing" | "category" | "geocat" | "questions";
@@ -503,58 +550,7 @@ export default function MasalalarPage() {
   const svgFill = (s: string) =>
     s.replace(/(<svg\b[^>]*?)style="[^"]*"/i, '$1style="display:block;width:100%;"');
 
-  // ── Solution step parser ─────────────────────────────────────────────────
-  function parseSolutionSteps(sol: string): string[] {
-    // Split on "\ \ N)" pattern or just on step numbers
-    const parts = sol.split(/\\ \\ (?=\d+\))/);
-    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
-    // Fallback: split on double-space before digit
-    const parts2 = sol.split(/\s{2,}(?=\d+\))/);
-    if (parts2.length > 1) return parts2.map(p => p.trim()).filter(Boolean);
-    return [sol];
-  }
-
-  // ── Chat-style solution panel ──────────────────────────────────────────
-  const SolutionChat = ({ sol }: { sol: string }) => {
-    const steps = parseSolutionSteps(sol);
-    const isSingleBlock = steps.length <= 1;
-    return (
-      <div className="flex-1 min-h-0 flex flex-col bg-[#0a0c10] border-l border-[#1e1e1e]">
-        <div className="px-4 py-3 border-b border-[#1e1e1e] flex items-center gap-2 shrink-0">
-          <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-          <span className="text-brand text-xs font-semibold uppercase tracking-widest">Yechim</span>
-          <span className="text-gray-600 text-xs ml-auto">{steps.length} qadam</span>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
-          {isSingleBlock ? (
-            <div className="bg-[#111318] border border-[#2a2a2e] rounded-2xl px-4 py-3 text-sm text-gray-200">
-              <MathRenderer formula={sol} displayMode />
-            </div>
-          ) : (
-            steps.map((step, i) => {
-              const clean = step.replace(/^\d+\)\s*\\?\s*/, "");
-              return (
-                <div key={i} className="flex gap-2 items-start group">
-                  {/* Step number bubble */}
-                  <div className="w-6 h-6 rounded-full bg-brand/20 border border-brand/30 text-brand text-[10px] font-black flex items-center justify-center shrink-0 mt-1">
-                    {i + 1}
-                  </div>
-                  {/* Step content */}
-                  <div className="flex-1 bg-[#111318] border border-[#2a2a2e] group-hover:border-[#3a3a3e] rounded-2xl rounded-tl-sm px-3 py-2.5 transition-colors">
-                    <div className="text-gray-200 text-sm leading-relaxed">
-                      <MathRenderer formula={clean} displayMode />
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const questionBody = (maxW?: string) => (
+  const questionBody = () => (
     <QuestionBody
       active={active!} idx={idx}
       isMarked={isMarked} onToggleMark={toggleMark}
