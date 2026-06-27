@@ -91,8 +91,12 @@ export default function MathRenderer({ formula, displayMode = false, className }
   const html = useMemo(() => {
     if (!formula) return "";
 
-    // Pure LaTeX formula (starts with \): render whole thing with KaTeX
-    const isPureLaTeX = /^\s*\\/.test(formula);
+    // Pure LaTeX: starts with \ OR contains {,} (decimal comma notation)
+    // OR contains \ and { (mixed math expression like "0{,}25=\dfrac{1}{4}")
+    const isPureLaTeX =
+      /^\s*\\/.test(formula) ||
+      formula.includes("{,}") ||
+      (formula.includes("\\") && formula.includes("{"));
 
     if (!displayMode || isPureLaTeX) {
       return katex.renderToString(formula, {
