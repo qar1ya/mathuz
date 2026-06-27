@@ -26,7 +26,19 @@ function parseMixed(text: string): Array<{ type: "text" | "math"; content: strin
       i++; // skip backslash
 
       // Command name
-      while (i < text.length && /[a-zA-Z]/.test(text[i])) i++;
+      while (i < text.length && /[a-zA-Z*]/.test(text[i])) i++;
+
+      // \left, \right, \big, \Big etc. — delimiter ([ ] ( ) | . \{ \}) ni ham olish
+      const cmdName = text.slice(cmdStart + 1, i);
+      const delimCmds = ['left','right','bigl','bigr','Bigl','Bigr','big','Big','bigg','Bigg'];
+      if (delimCmds.includes(cmdName) && i < text.length) {
+        if (/[\[\]().|/]/.test(text[i])) {
+          i++; // consume delimiter char: [ ] ( ) | .
+        } else if (text[i] === '\\') {
+          i++; // \{ or \}
+          if (i < text.length) i++;
+        }
+      }
 
       // Brace arguments — handle nested braces properly
       let argCount = 0;
@@ -77,18 +89,24 @@ function escHtml(s: string): string {
 
 export default function MathRenderer({ formula, displayMode = false, className }: Props) {
   const html = useMemo(() => {
-    if (!displayMode) {
-      // Options / short LaTeX-only strings — render inline math directly
-      return katex.renderToString(formula, { throwOnError: false, displayMode: false });
+    if (!formula) return "";
+
+    // Pure LaTeX formula (starts with \): render whole thing with KaTeX
+    const isPureLaTeX = /^\s*\\/.test(formula);
+
+    if (!displayMode || isPureLaTeX) {
+      return katex.renderToString(formula, {
+        throwOnError: false,
+        displayMode: isPureLaTeX && displayMode,
+      });
     }
 
-    // Question texts and solutions — mixed Uzbek text + LaTeX commands
+    // Mixed Uzbek/Russian text + LaTeX — split and render segments
     return parseMixed(formula)
       .map((seg) => {
         if (seg.type === "math") {
           return katex.renderToString(seg.content, { throwOnError: false, displayMode: false });
         }
-        // Plain text: use normal font, preserve spaces
         return `<span style="font-family:inherit;font-style:normal;font-weight:inherit">${escHtml(seg.content)}</span>`;
       })
       .join("");
