@@ -880,40 +880,20 @@ function QuestionBody({
             );
           })}
 
-          {/* Explanation panel for MCQ */}
+          {/* Correct answer indicator for MCQ — yechim o'ng panelda */}
           {showExplanation && isChecked && (
-            <div className="mt-4 border border-[#2a2a2a] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 bg-[#111] space-y-3">
-                {/* Always show correct answer */}
-                <div>
-                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">To&apos;g&apos;ri javob</p>
-                  <div className="flex flex-col gap-1">
-                    {active.options.map((opt, i) => {
-                      const letter = letters[i];
-                      if (!isOptCorrect(letter, opt)) return null;
-                      return (
-                        <div key={letter} className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                            {letter}
-                          </span>
-                          <span className="text-green-300 text-sm">
-                            <MathRenderer formula={opt} />
-                          </span>
-                        </div>
-                      );
-                    })}
+            <div className="mt-3 border border-[#2a2a2a] rounded-xl px-4 py-3 bg-[#111] flex items-center gap-3">
+              <p className="text-[10px] text-gray-600 uppercase tracking-widest shrink-0">To&apos;g&apos;ri javob</p>
+              {active.options.map((opt, i) => {
+                const letter = letters[i];
+                if (!isOptCorrect(letter, opt)) return null;
+                return (
+                  <div key={letter} className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">{letter}</span>
+                    <span className="text-green-300 text-sm"><MathRenderer formula={opt} /></span>
                   </div>
-                </div>
-                {/* Show solution text if available */}
-                {active.solution && (
-                  <div>
-                    <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
-                    <div className="text-gray-300 text-sm leading-relaxed">
-                      <MathRenderer formula={active.solution} displayMode />
-                    </div>
-                  </div>
-                )}
-              </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -955,15 +935,10 @@ function QuestionBody({
                 <div className="text-green-400 text-2xl font-bold">
                   <MathRenderer formula={active.answer} />
                 </div>
+                {active.solution && (
+                  <p className="text-gray-600 text-[10px] mt-2">Batafsil yechim → o&apos;ng panelda</p>
+                )}
               </div>
-              {active.solution && (
-                <div className="px-5 py-4 border-t border-[#222] bg-[#111]">
-                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Yechim</p>
-                  <div className="text-gray-300 text-sm leading-relaxed">
-                    <MathRenderer formula={active.solution} displayMode />
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
