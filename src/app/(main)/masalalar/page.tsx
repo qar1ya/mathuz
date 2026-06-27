@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Category = "Algebra" | "Geometriya";
+type Category = "Algebra" | "Geometriya" | "Skanaviy";
 type View = "landing" | "category" | "geocat" | "questions";
 type SubGroup = { label: string; topics: string[] };
 type GeoGroup = { label: string; topics: string[]; gradient: string; icon: string; subGroups: SubGroup[] };
@@ -173,6 +173,61 @@ const GEO_GROUPS: GeoGroup[] = [
   },
 ];
 const GEO_TOPICS: string[] = GEO_GROUPS.flatMap(g => g.topics);
+
+// ── SKANAVIY GROUPS ──────────────────────────────────────────────────────────
+const SKANAVIY_GROUPS: SubGroup[] = [
+  {
+    label: "Algebraik ifodalar (1–4 bob)",
+    topics: [
+      "Skanaviy: Algebraik ifodalar",
+      "Skanaviy: Darajali va ildizli ifodalar",
+      "Skanaviy: Logarifmik ifodalar",
+      "Skanaviy: Trigonometrik ifodalar",
+    ],
+  },
+  {
+    label: "Tenglamalar (5–9 bob)",
+    topics: [
+      "Skanaviy: Algebraik tenglamalar",
+      "Skanaviy: Irratsional tenglamalar",
+      "Skanaviy: Logarifmik tenglamalar",
+      "Skanaviy: Trigonometrik tenglamalar",
+      "Skanaviy: Tenglamalar sistemasi",
+    ],
+  },
+  {
+    label: "Tengsizliklar (10–13 bob)",
+    topics: [
+      "Skanaviy: Algebraik tengsizliklar",
+      "Skanaviy: Irratsional tengsizliklar",
+      "Skanaviy: Logarifmik tengsizliklar",
+      "Skanaviy: Trigonometrik tengsizliklar",
+    ],
+  },
+  {
+    label: "Funksiyalar va grafiklar (14–16 bob)",
+    topics: [
+      "Skanaviy: Funksiyalar va ularning xossalari",
+      "Skanaviy: Funksiya grafiklari",
+      "Skanaviy: Trigonometrik funksiyalar",
+    ],
+  },
+  {
+    label: "Kombinatorika va ehtimollik (17–18 bob)",
+    topics: [
+      "Skanaviy: Kombinatorika",
+      "Skanaviy: Ehtimollik nazariyasi",
+    ],
+  },
+  {
+    label: "Analiz elementlari (19–20 bob)",
+    topics: [
+      "Skanaviy: Hosila va qo'llanilishi",
+      "Skanaviy: Integral va qo'llanilishi",
+    ],
+  },
+];
+const SKANAVIY_TOPICS: string[] = SKANAVIY_GROUPS.flatMap(g => g.topics);
 const DIFFICULTIES: (Difficulty | "Barchasi")[] = ["Barchasi", "Oson", "O'rtacha", "Qiyin"];
 const isImageUrl = (s: string) => s.startsWith("/") || s.startsWith("http");
 
@@ -221,8 +276,10 @@ export default function MasalalarPage() {
     setCrossedOut(new Set()); setShowExplanation(false); setSeconds(0);
   }, []);
 
-  const catCount = (c: Category) =>
-    all.filter(q => (c === "Algebra" ? ALGEBRA_TOPICS : GEO_TOPICS).includes(q.topic)).length;
+  const catCount = (c: Category) => {
+    const topics = c === "Algebra" ? ALGEBRA_TOPICS : c === "Geometriya" ? GEO_TOPICS : SKANAVIY_TOPICS;
+    return all.filter(q => topics.includes(q.topic)).length;
+  };
   const topicCount = (t: string) => all.filter(q => q.topic === t).length;
   const groupCount = (topics: string[]) => topics.reduce((s, t) => s + topicCount(t), 0);
 
@@ -256,10 +313,11 @@ export default function MasalalarPage() {
           <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand font-bold text-lg">?</div>
           <h1 className="text-white text-2xl font-bold">Masalalar Banki</h1>
         </div>
-        <div className="grid grid-cols-2 gap-5 max-w-2xl">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5 max-w-3xl">
           {([
-            { c: "Algebra" as Category, gradient: "linear-gradient(135deg,#7c3aed 0%,#2563eb 100%)", icon: "∑" },
+            { c: "Algebra" as Category,   gradient: "linear-gradient(135deg,#7c3aed 0%,#2563eb 100%)", icon: "∑" },
             { c: "Geometriya" as Category, gradient: "linear-gradient(135deg,#059669 0%,#0d9488 100%)", icon: "△" },
+            { c: "Skanaviy" as Category,  gradient: "linear-gradient(135deg,#b45309 0%,#dc2626 100%)", icon: "S" },
           ]).map(({ c, gradient, icon }) => (
             <div key={c} onClick={() => openCat(c)}
               className="relative rounded-2xl overflow-hidden p-6 min-h-[200px] flex flex-col justify-between cursor-pointer hover:opacity-90 transition-opacity"
@@ -267,6 +325,7 @@ export default function MasalalarPage() {
               <span className="absolute right-4 top-2 text-white/10 font-bold select-none pointer-events-none" style={{ fontSize: 110, lineHeight: 1 }}>{icon}</span>
               <div>
                 <h2 className="text-white text-xl font-bold mb-1">{c}</h2>
+                {c === "Skanaviy" && <p className="text-white/60 text-xs mb-1">M.I. Skanavi to&apos;plami</p>}
                 <p className="text-white/70 text-sm">{catCount(c)} ta masala</p>
               </div>
               <button className="flex items-center gap-1 bg-white text-black text-sm font-semibold px-4 py-2 rounded-full w-fit hover:bg-gray-100 transition-colors">
@@ -308,6 +367,45 @@ export default function MasalalarPage() {
         </div>
         <TableHeader />
         {ALGEBRA_GROUPS.map(group => (
+          <div key={group.label} className="mb-6">
+            <p className="text-white font-semibold text-base py-3 px-2">{group.label}</p>
+            {group.topics.map(topic => (
+              <TopicRow key={topic} topic={topic} count={topicCount(topic)} onClick={() => openTopic(topic)} />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── SKANAVIY CATEGORY ────────────────────────────────────────────────────
+  if (view === "category" && cat === "Skanaviy") {
+    return (
+      <div className="flex-1 overflow-y-auto p-8">
+        <button onClick={backToLanding} className="flex items-center gap-1.5 text-gray-400 hover:text-white text-sm transition-colors mb-6">
+          <ArrowLeft size={15} /> Masalalar Bankiga qaytish
+        </button>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-white text-3xl font-bold">Skanaviy</h1>
+            <p className="text-gray-500 text-sm mt-1">M.I. Skanavi — Matematika masalalari to&apos;plami</p>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#b45309]/30 bg-[#b45309]/10">
+            <span className="text-[#f97316] text-sm font-bold">S</span>
+            <span className="text-[#f97316] text-xs">Skanaviy</span>
+          </div>
+        </div>
+        <div className="bg-dark-card border border-dark-border rounded-2xl p-5 flex items-center justify-between mb-8">
+          <div>
+            <p className="text-white font-bold text-base mb-0.5">Barcha boblarni o&apos;rganing</p>
+            <p className="text-gray-500 text-sm">Skanaviy to&apos;plamida {catCount("Skanaviy")} ta masala</p>
+          </div>
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-dark-hover border border-dark-border rounded-xl text-white text-sm font-medium hover:bg-dark-border transition-colors">
+            <Play size={14} className="text-brand" /> Boshlash
+          </button>
+        </div>
+        <TableHeader />
+        {SKANAVIY_GROUPS.map(group => (
           <div key={group.label} className="mb-6">
             <p className="text-white font-semibold text-base py-3 px-2">{group.label}</p>
             {group.topics.map(topic => (
