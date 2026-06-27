@@ -519,13 +519,13 @@ export default function MasalalarPage() {
     const steps = parseSolutionSteps(sol);
     const isSingleBlock = steps.length <= 1;
     return (
-      <div className="h-full flex flex-col bg-[#0a0c10] border-l border-[#1e1e1e]">
+      <div className="flex-1 min-h-0 flex flex-col bg-[#0a0c10] border-l border-[#1e1e1e]">
         <div className="px-4 py-3 border-b border-[#1e1e1e] flex items-center gap-2 shrink-0">
           <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
           <span className="text-brand text-xs font-semibold uppercase tracking-widest">Yechim</span>
           <span className="text-gray-600 text-xs ml-auto">{steps.length} qadam</span>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
           {isSingleBlock ? (
             <div className="bg-[#111318] border border-[#2a2a2e] rounded-2xl px-4 py-3 text-sm text-gray-200">
               <MathRenderer formula={sol} displayMode />
@@ -592,7 +592,7 @@ export default function MasalalarPage() {
             {questionBody()}
           </div>
         </div>
-        <div className="w-80 shrink-0 overflow-hidden flex flex-col">
+        <div className="w-80 shrink-0 flex flex-col min-h-0">
           <SolutionChat sol={active.solution} />
         </div>
       </div>
