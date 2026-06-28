@@ -211,7 +211,9 @@ export default function AdminPage() {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
-  const [tab, setTab] = useState<"add" | "list" | "yechim">("yechim");
+  const [tab, setTab] = useState<"add" | "list" | "yechim" | "teacher">("yechim");
+  const [teacherEmail, setTeacherEmail] = useState("");
+  const [teacherMsg, setTeacherMsg] = useState("");
   const [questions, setQuestions] = useState<{ id: string; text: string; topic: string; difficulty: string }[]>([]);
   const [loadingQ, setLoadingQ] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -284,6 +286,7 @@ export default function AdminPage() {
         <div className="flex gap-2">
           {([
             { key: "yechim", label: "✏️ Yechim yozish" },
+            { key: "teacher", label: "👩‍🏫 O'qituvchi" },
             { key: "add", label: "+ Savol qo'shish" },
             { key: "list", label: `Ro'yxat` },
           ] as const).map(t => (
@@ -298,6 +301,34 @@ export default function AdminPage() {
       </div>
 
       {tab === "yechim" && <YechimTab />}
+
+      {tab === "teacher" && (
+        <div className="max-w-md mx-auto p-6">
+          <h2 className="text-white font-semibold mb-2">O&apos;qituvchi roli berish</h2>
+          <p className="text-gray-500 text-sm mb-5">
+            Foydalanuvchi emailini kiriting — ular classroom yarata oladi.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="text-gray-400 text-xs mb-1.5 block">Foydalanuvchi emaili</label>
+              <input value={teacherEmail} onChange={e => setTeacherEmail(e.target.value)}
+                placeholder="user@example.com"
+                className={inp} />
+            </div>
+            {teacherMsg && (
+              <p className={`text-sm ${teacherMsg.startsWith("✅") ? "text-green-400" : "text-red-400"}`}>
+                {teacherMsg}
+              </p>
+            )}
+            <p className="text-gray-600 text-xs bg-dark-hover rounded-xl p-3">
+              💡 O&apos;qituvchi roli berish uchun Supabase SQL Editor da quyidagini ishlating:<br/>
+              <code className="text-brand text-[10px]">
+                UPDATE auth.users SET raw_user_meta_data = raw_user_meta_data || {`'{"is_teacher":true}'`}::jsonb WHERE email = &apos;EMAIL&apos;;
+              </code>
+            </p>
+          </div>
+        </div>
+      )}
 
       {tab === "add" && (
         <div className="max-w-2xl mx-auto p-6 space-y-4">

@@ -35,6 +35,7 @@ export interface User {
   totalAttempted: number;
   accuracy: number;
   isPremium: boolean;
+  isTeacher: boolean;
 }
 
 export interface StudyTask {
@@ -48,4 +49,39 @@ export interface StudyTask {
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+export interface Classroom {
+  id: string;
+  name: string;
+  description: string;
+  teacher_id: string;
+  code: string;
+  created_at: string;
+}
+
+export interface ClassroomMember {
+  id: string;
+  classroom_id: string;
+  user_id: string;
+  role: "teacher" | "student";
+  joined_at: string;
+}
+
+export interface Assignment {
+  id: string;
+  classroom_id: string;
+  title: string;
+  question_ids: string[];
+  due_date: string | null;
+  created_at: string;
+}
+
+export interface Submission {
+  id: string;
+  assignment_id: string;
+  user_id: string;
+  answers: Record<string, string>;
+  score: number;
+  submitted_at: string;
 }

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Bot, Calendar, PlayCircle, BarChart2,
   BookOpen, Zap, FileText, Bookmark, Crown, Settings,
-  ChevronDown, ClipboardList, Sigma, Check, LogOut,
+  ChevronDown, ClipboardList, Sigma, Check, LogOut, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,7 @@ const mainItems = [
   { href: "/darslar", icon: PlayCircle, label: "Video Darslar", isNew: true },
   { href: "/masalalar", icon: BookOpen, label: "Masalalar Banki" },
   { href: "/testlar", icon: ClipboardList, label: "Testlar" },
+  { href: "/classroom", icon: Users, label: "Classroom", isNew: true },
   { href: "/tahlil", icon: BarChart2, label: "Tahlil" },
 ];
 

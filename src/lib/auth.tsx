@@ -30,6 +30,7 @@ function toAppUser(sbUser: SupabaseUser): User {
     totalAttempted: m.total_attempted ?? 0,
     accuracy: m.accuracy ?? 0,
     isPremium: m.is_premium === true,
+    isTeacher: m.is_teacher === true,
   };
 }
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (patch.totalAttempted !== undefined) meta.total_attempted = patch.totalAttempted;
     if (patch.accuracy !== undefined)       meta.accuracy = patch.accuracy;
     if (patch.isPremium !== undefined)      meta.is_premium = patch.isPremium;
+    if (patch.isTeacher !== undefined)      meta.is_teacher = patch.isTeacher;
 
     const { data, error } = await supabase.auth.updateUser({ data: meta });
     if (!error && data.user) {
