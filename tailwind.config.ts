@@ -9,13 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: "#00d4aa",
-        "brand-dark": "#00b894",
-        "dark-bg": "#0d0d0f",
-        "dark-sidebar": "#111113",
-        "dark-card":   "#18181b",
-        "dark-hover":  "#27272a",
-        "dark-border": "#27272a",
+        brand: "#7c3aed",
+        "brand-dark": "#6d28d9",
+        "dark-bg":     "#f5f5f7",
+        "dark-sidebar":"#ffffff",
+        "dark-card":   "#ffffff",
+        "dark-hover":  "#f5f3ff",
+        "dark-border": "#ebebeb",
       },
     },
   },

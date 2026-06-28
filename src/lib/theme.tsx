@@ -15,7 +15,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("mathuz_theme") as Theme | null;
-    const initial = saved ?? "dark";
+    const initial = saved ?? "light";
     setTheme(initial);
     document.documentElement.setAttribute("data-theme", initial);
   }, []);
