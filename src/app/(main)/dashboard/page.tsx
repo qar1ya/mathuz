@@ -1,216 +1,272 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { CheckCircle2, Circle, ChevronRight, Target, Calendar, Crown, Trophy } from "lucide-react";
+import {
+  BookOpen, Target, Flame, Coins, ChevronRight,
+  Trophy, TrendingUp, Calendar, BarChart2, Users, Bot, Zap
+} from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
-// ── Leaderboard ────────────────────────────────────────────────────────────
-interface LeaderEntry { user_id: string; name: string; coins: number; streak: number; }
+interface LeaderEntry { user_id: string; name: string; coins: number; }
 
-function LeaderboardCard() {
-  const { user } = useAuth();
-  const [leaders, setLeaders] = useState<LeaderEntry[]>([]);
-  const medals = ["🥇", "🥈", "🥉"];
-
-  useEffect(() => {
-    supabase.from("leaderboard").select("user_id,name,coins,streak")
-      .order("coins", { ascending: false }).limit(8)
-      .then(({ data }) => { if (data) setLeaders(data); });
-  }, []);
-
-  return (
-    <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Crown size={16} className="text-yellow-400" />
-          <h3 className="text-white font-semibold text-sm">Reyting jadvali</h3>
-        </div>
-        <span className="text-gray-600 text-xs">Tangalar bo&apos;yicha</span>
-      </div>
-
-      {leaders.length === 0 ? (
-        <p className="text-gray-600 text-sm text-center py-4">Hali hech kim yo&apos;q</p>
-      ) : (
-        <div className="space-y-2">
-          {leaders.map((entry, i) => {
-            const isMe = user?.id === entry.user_id;
-            return (
-              <div key={entry.user_id}
-                className={cn("flex items-center gap-3 px-3 py-2 rounded-xl",
-                  isMe ? "bg-brand/10 border border-brand/20" : "bg-dark-hover")}>
-                <span className="text-base w-5 text-center shrink-0">
-                  {i < 3 ? medals[i] : <span className="text-gray-600 text-xs font-bold">{i + 1}</span>}
-                </span>
-                <div className="w-7 h-7 rounded-full bg-dark-card flex items-center justify-center text-xs font-bold shrink-0"
-                  style={{ color: isMe ? "#00d4aa" : "#9ca3af" }}>
-                  {entry.name.charAt(0).toUpperCase()}
-                </div>
-                <span className={cn("flex-1 text-sm truncate", isMe ? "text-brand font-medium" : "text-gray-200")}>
-                  {entry.name} {isMe && <span className="text-[10px] opacity-60">(siz)</span>}
-                </span>
-                <span className="text-yellow-400 font-bold text-sm shrink-0">{entry.coins} 🪙</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main Dashboard ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, updateProfile } = useAuth();
+  const [leaders, setLeaders] = useState<LeaderEntry[]>([]);
 
   // Daily streak
   useEffect(() => {
     if (!user) return;
     const today = new Date().toISOString().split("T")[0];
-    const lastKey = `mathuz_last_visit_${user.id}`;
-    const last = localStorage.getItem(lastKey);
+    const key = `mathuz_last_visit_${user.id}`;
+    const last = localStorage.getItem(key);
     if (last === today) return;
-    localStorage.setItem(lastKey, today);
+    localStorage.setItem(key, today);
     const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
     const newStreak = last === yesterday ? (user.streak ?? 0) + 1 : 1;
     if (newStreak !== user.streak) updateProfile({ streak: newStreak });
   }, [user, updateProfile]);
 
-  // Exam countdown
+  // Leaderboard
+  useEffect(() => {
+    supabase.from("leaderboard").select("user_id,name,coins")
+      .order("coins", { ascending: false }).limit(5)
+      .then(({ data }) => { if (data) setLeaders(data); });
+  }, []);
+
   const examDate = user?.examDate ? new Date(user.examDate) : new Date("2026-08-22");
   const daysLeft = Math.max(0, Math.ceil((examDate.getTime() - Date.now()) / 86400000));
-  const examStr = examDate.toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" });
+  const accuracy = user?.accuracy ?? 0;
+  const total = user?.totalAttempted ?? 0;
 
-  // Today's tasks
-  const tasks = [
-    { id: "1", title: "Logarifm mashqlari", done: 16, total: 20, done_: false },
-    { id: "2", title: "Integral takrorlash",  done: 22, total: 30, done_: true  },
-    { id: "3", title: "DTM test ishlash",     done:  0, total: 40, done_: false },
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Xayrli tong" : hour < 18 ? "Xayrli kun" : "Xayrli kech";
+
+  const quickLinks = [
+    { href: "/masalalar", icon: BookOpen, label: "Masalalar", color: "#00d4aa", bg: "rgba(0,212,170,0.1)" },
+    { href: "/testlar",   icon: Target,   label: "Test",       color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
+    { href: "/classroom", icon: Users,    label: "Classroom",  color: "#8b5cf6", bg: "rgba(139,92,246,0.1)" },
+    { href: "/ai",        icon: Bot,      label: "AI Yordam",  color: "#f97316", bg: "rgba(249,115,22,0.1)" },
+    { href: "/tahlil",    icon: BarChart2,label: "Tahlil",     color: "#ec4899", bg: "rgba(236,72,153,0.1)" },
+    { href: "/tezkor",    icon: Zap,      label: "Tezkor",     color: "#eab308", bg: "rgba(234,179,8,0.1)" },
   ];
 
+  const medals = ["🥇", "🥈", "🥉"];
+
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto">
-      {/* Greeting */}
-      <div className="mb-6">
-        <h1 className="text-white font-bold text-2xl">
-          Salom, {user?.name ?? "Foydalanuvchi"} 👋
-        </h1>
-        <p className="text-gray-500 text-sm mt-0.5">Bugun ham maqsadingizga bir qadam yaqinlashing.</p>
-      </div>
+    <div className="min-h-full bg-dark-bg p-5 md:p-6">
+      <div className="max-w-5xl mx-auto space-y-5">
 
-      {/* 2x2 grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* 1. Exam date */}
-        <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar size={16} className="text-brand" />
-            <h3 className="text-white font-semibold text-sm">Imtihon sanasi</h3>
+        {/* Header greeting */}
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-gray-500 text-sm">{greeting} 👋</p>
+            <h1 className="text-white font-bold text-2xl mt-0.5">
+              {user?.name ?? "Foydalanuvchi"}
+            </h1>
           </div>
-          <div className="text-center py-2">
-            <p className="text-brand text-xs font-semibold uppercase tracking-widest mb-2">
-              {user?.examType ?? "DTM"} imtihoni
-            </p>
-            <p className="text-white font-black text-6xl leading-none">{daysLeft}</p>
-            <p className="text-gray-500 text-sm mt-2">kun qoldi</p>
-            <p className="text-gray-600 text-xs mt-1">{examStr}</p>
-          </div>
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-              <span>Tayyorgarlik</span>
-              <span className="text-brand font-semibold">
-                {Math.min(100, Math.round((1 - daysLeft / 365) * 100))}%
-              </span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-dark-card border border-dark-border rounded-xl px-3 py-2">
+              <Flame size={14} className="text-orange-400" />
+              <span className="text-white text-sm font-bold">{user?.streak ?? 0}</span>
+              <span className="text-gray-500 text-xs">kun</span>
             </div>
-            <div className="h-1.5 bg-dark-hover rounded-full overflow-hidden">
-              <div className="h-full bg-brand rounded-full"
-                style={{ width: `${Math.min(100, Math.round((1 - daysLeft / 365) * 100))}%` }} />
+            <div className="flex items-center gap-1.5 bg-dark-card border border-dark-border rounded-xl px-3 py-2">
+              <Coins size={14} className="text-yellow-400" />
+              <span className="text-white text-sm font-bold">{user?.coins ?? 0}</span>
             </div>
           </div>
         </div>
 
-        {/* 2. Bugungi reja */}
-        <div className="bg-dark-card border border-dark-border rounded-2xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-brand" />
-              <h3 className="text-white font-semibold text-sm">Bugungi reja</h3>
+        {/* Quick links */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
+          {quickLinks.map(({ href, icon: Icon, label, color, bg }) => (
+            <Link key={href} href={href}
+              className="bg-dark-card border border-dark-border rounded-2xl p-3 flex flex-col items-center gap-2 hover:border-dark-border/60 transition-all group hover:scale-[1.02]">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: bg }}>
+                <Icon size={18} style={{ color }} />
+              </div>
+              <span className="text-gray-400 text-[11px] font-medium group-hover:text-white transition-colors">
+                {label}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Main grid: 3 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+          {/* Imtihon sanasi */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-28 h-28 rounded-full opacity-5 blur-2xl"
+              style={{ background: "#00d4aa" }} />
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={14} className="text-brand" />
+              <span className="text-gray-400 text-xs font-medium">{user?.examType ?? "DTM"} imtihoni</span>
             </div>
-            <Link href="/reja" className="text-xs text-brand hover:underline flex items-center gap-1">
-              Hammasi <ChevronRight size={12} />
+            <div className="text-center py-2">
+              <p className="text-white font-black text-6xl leading-none">{daysLeft}</p>
+              <p className="text-gray-500 text-sm mt-1.5">kun qoldi</p>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-gray-600 mb-1.5">
+                <span>Tayyorgarlik</span>
+                <span className="text-brand">{Math.min(100, Math.round((1 - daysLeft / 365) * 100))}%</span>
+              </div>
+              <div className="h-1.5 bg-dark-hover rounded-full overflow-hidden">
+                <div className="h-full bg-brand rounded-full"
+                  style={{ width: `${Math.min(100, Math.round((1 - daysLeft / 365) * 100))}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Statistika */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={14} className="text-brand" />
+              <span className="text-gray-400 text-xs font-medium">Mening statistikam</span>
+            </div>
+            <div className="space-y-3.5">
+              {[
+                { label: "Jami savollar", value: total, color: "#00d4aa", max: Math.max(total, 100) },
+                { label: "Aniqlik", value: `${accuracy}%`, color: "#3b82f6", pct: accuracy },
+                { label: "Tanga", value: user?.coins ?? 0, color: "#eab308", max: 1000 },
+              ].map(({ label, value, color, pct, max }) => (
+                <div key={label}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-500">{label}</span>
+                    <span className="font-semibold" style={{ color }}>{value}</span>
+                  </div>
+                  <div className="h-1 bg-dark-hover rounded-full overflow-hidden">
+                    <div className="h-full rounded-full"
+                      style={{
+                        backgroundColor: color,
+                        width: `${pct !== undefined ? pct : Math.min(100, ((typeof value === 'number' ? value : 0) / (max ?? 100)) * 100)}%`
+                      }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/tahlil"
+              className="mt-4 flex items-center justify-center gap-1.5 py-2 border border-dark-border rounded-xl text-xs text-gray-400 hover:text-white hover:border-dark-border/60 transition-colors">
+              Batafsil <ChevronRight size={12} />
             </Link>
           </div>
-          <div className="flex-1 space-y-3">
-            {tasks.map((task) => (
-              <div key={task.id}>
-                <div className="flex items-center gap-2 mb-1.5">
-                  {task.done_
-                    ? <CheckCircle2 size={14} className="text-brand shrink-0" />
-                    : <Circle size={14} className="text-gray-600 shrink-0" />}
-                  <span className={cn("flex-1 text-xs truncate",
-                    task.done_ ? "text-gray-500 line-through" : "text-gray-200")}>
-                    {task.title}
-                  </span>
-                  <span className="text-[10px] text-gray-600 shrink-0">{task.done}/{task.total}</span>
-                </div>
-                <div className="ml-5 h-1 bg-dark-hover rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full", task.done_ ? "bg-brand" : "bg-brand/40")}
-                    style={{ width: `${Math.round((task.done / task.total) * 100)}%` }} />
-                </div>
+
+          {/* Reyting */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy size={14} className="text-yellow-400" />
+              <span className="text-gray-400 text-xs font-medium">Reyting jadvali</span>
+            </div>
+            {leaders.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-gray-600 text-xs">Hali hech kim yo&apos;q</p>
+                <p className="text-gray-700 text-[11px]">Test ishlang!</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-2">
+                {leaders.map((entry, i) => {
+                  const isMe = user?.id === entry.user_id;
+                  return (
+                    <div key={entry.user_id}
+                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl ${isMe ? "bg-brand/10 border border-brand/20" : "bg-dark-hover"}`}>
+                      <span className="text-sm w-5 text-center shrink-0">
+                        {i < 3 ? medals[i] : <span className="text-gray-600 text-xs">{i + 1}</span>}
+                      </span>
+                      <span className={`flex-1 text-xs truncate ${isMe ? "text-brand font-medium" : "text-gray-300"}`}>
+                        {entry.name} {isMe && "(siz)"}
+                      </span>
+                      <span className="text-yellow-400 text-xs font-bold shrink-0">{entry.coins}🪙</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <Link href="/reja"
-            className="mt-4 flex items-center justify-center py-2 border border-brand/30 text-brand text-xs font-medium rounded-xl hover:bg-brand/10 transition-colors">
-            Rejani davom ettirish
-          </Link>
         </div>
 
-        {/* 3. Reyting jadvali */}
-        <LeaderboardCard />
-
-        {/* 4. My Goal */}
-        <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Target size={16} className="text-brand" />
-            <h3 className="text-white font-semibold text-sm">Mening maqsadim</h3>
-          </div>
-
-          {/* Goal stats */}
-          <div className="space-y-3 mb-4">
-            {[
-              { label: "Jami urinishlar",  value: user?.totalAttempted ?? 0,  color: "#00d4aa" },
-              { label: "Aniqlik",          value: `${user?.accuracy ?? 0}%`,  color: "#3b82f6" },
-              { label: "Streak",           value: `${user?.streak ?? 0} kun`, color: "#f97316" },
-              { label: "Tangalar",         value: `${user?.coins ?? 0} 🪙`,   color: "#eab308" },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-gray-500 text-xs">{label}</span>
-                <span className="font-semibold text-sm" style={{ color }}>{value}</span>
+        {/* Bottom: Reja + Maqsad */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Bugungi reja */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Target size={14} className="text-brand" />
+                <span className="text-gray-400 text-xs font-medium">Bugungi reja</span>
               </div>
-            ))}
+              <Link href="/reja" className="text-[11px] text-brand hover:underline">Hammasi</Link>
+            </div>
+            <div className="space-y-3">
+              {[
+                { title: "Kasrlar bo'limi", done: 16, total: 20, checked: false },
+                { title: "DTM test ishlash", done: 0, total: 30, checked: false },
+                { title: "Formulalar takrorlash", done: 10, total: 10, checked: true },
+              ].map((t, i) => (
+                <div key={i}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${t.checked ? "border-brand bg-brand" : "border-dark-border"}`}>
+                      {t.checked && <span className="text-black text-[8px] font-black">✓</span>}
+                    </div>
+                    <span className={`flex-1 text-xs ${t.checked ? "text-gray-600 line-through" : "text-gray-300"}`}>
+                      {t.title}
+                    </span>
+                    <span className="text-[11px] text-gray-600">{t.done}/{t.total}</span>
+                  </div>
+                  <div className="ml-6 h-1 bg-dark-hover rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${t.checked ? "bg-brand" : "bg-brand/40"}`}
+                      style={{ width: `${Math.round(t.done / t.total * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="border-t border-dark-border pt-4">
-            <p className="text-gray-600 text-xs mb-3">Tezkor havolalar</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Link href="/masalalar"
-                className="py-2 text-center text-xs font-medium rounded-xl bg-brand/10 text-brand hover:bg-brand/20 transition-colors border border-brand/20">
-                Masalalar
-              </Link>
-              <Link href="/testlar"
-                className="py-2 text-center text-xs font-medium rounded-xl bg-dark-hover text-gray-300 hover:text-white transition-colors border border-dark-border">
-                Testlar
-              </Link>
-              <Link href="/tahlil"
-                className="py-2 text-center text-xs font-medium rounded-xl bg-dark-hover text-gray-300 hover:text-white transition-colors border border-dark-border">
-                Tahlil
-              </Link>
-              <Link href="/ai"
-                className="py-2 text-center text-xs font-medium rounded-xl bg-dark-hover text-gray-300 hover:text-white transition-colors border border-dark-border">
-                AI Yordam
-              </Link>
+          {/* Maqsad */}
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Target size={14} className="text-brand" />
+              <span className="text-gray-400 text-xs font-medium">Mening maqsadim</span>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-dark-hover rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-orange-400/10 flex items-center justify-center">
+                    <Flame size={15} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-xs font-medium">Streak</p>
+                    <p className="text-gray-500 text-[10px]">Ketma-ket kun</p>
+                  </div>
+                </div>
+                <span className="text-orange-400 font-black text-xl">{user?.streak ?? 0}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-dark-hover rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center">
+                    <BookOpen size={15} className="text-brand" />
+                  </div>
+                  <div>
+                    <p className="text-white text-xs font-medium">Jami urinishlar</p>
+                    <p className="text-gray-500 text-[10px]">Barcha savollar</p>
+                  </div>
+                </div>
+                <span className="text-brand font-black text-xl">{total}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-dark-hover rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-400/10 flex items-center justify-center">
+                    <TrendingUp size={15} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-xs font-medium">Aniqlik</p>
+                    <p className="text-gray-500 text-[10px]">To'g'ri javoblar</p>
+                  </div>
+                </div>
+                <span className="text-blue-400 font-black text-xl">{accuracy}%</span>
+              </div>
             </div>
           </div>
         </div>
