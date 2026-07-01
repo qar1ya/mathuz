@@ -52,7 +52,7 @@ function Sidebar({ current, onNav }: { current: Page; onNav: (p: Page) => void }
       <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "#7c3aed" }}>M</div>
         <div>
-          <p className="font-black text-sm" style={{ color: "#0f0f0f" }}>MathUz</p>
+          <p className="font-black text-sm" style={{ color: "#0f0f0f" }}>MathModul</p>
           <p className="text-[10px]" style={{ color: "#9ca3af" }}>Admin Panel</p>
         </div>
       </div>
@@ -163,7 +163,7 @@ function DashboardContent() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="MathUz tizimining umumiy holati" />
+      <PageHeader title="Dashboard" subtitle="MathModul tizimining umumiy holati" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Foydalanuvchilar" value={stats.users} icon={Users} color="#3b82f6" bg="#eff6ff" sub="jami ro'yxatdan o'tgan" />
         <StatCard title="Savollar" value={stats.questions} icon={BookOpen} color="#7c3aed" bg="#f5f3ff" sub="bazada mavjud" />

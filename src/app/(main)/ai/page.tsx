@@ -23,7 +23,7 @@ export default function AiPage() {
     {
       role: "assistant",
       content:
-        "Salom! Men MathUz AI o'qituvchisiman. Matematika bo'yicha savollaringizga javob beraman. Savol bering! 📐",
+        "Salom! Men MathModul AI o'qituvchisiman. Matematika bo'yicha savollaringizga javob beraman. Savol bering! 📐",
     },
   ]);
   const [input, setInput] = useState("");

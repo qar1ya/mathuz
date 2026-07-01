@@ -1,0 +1,4 @@
+id,text,answer,solution,topic,difficulty,options,exam_type,diagram_svg
+alg-001,"2x + 5 = 13. x ni toping.","4","2x = 8, x = 4","Chiziqli tenglamalar","Oson","[]","[""DTM"",""Milliy Sertifikat"",""Maktab""]",
+alg-002,"3x - 7 = 14. x ni toping.","7","3x = 21, x = 7","Chiziqli tenglamalar","Oson","[]","[""DTM"",""Milliy Sertifikat"",""Maktab""]",
+trig-001,"sin 30° ni toping.","1/2","sin 30° = 1/2","Trigonometriya asoslari","Oson","[]","[""DTM"",""Milliy Sertifikat"",""Maktab""]",

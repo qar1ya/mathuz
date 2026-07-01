@@ -123,7 +123,7 @@ export default function DashboardPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/cat.png"
-                alt="MathUz mascot"
+                alt="MathModul mascot"
                 style={{
                   width: 130, height: 130, objectFit: "contain",
                   objectPosition: "center bottom",

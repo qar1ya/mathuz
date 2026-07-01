@@ -282,7 +282,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-dark-bg text-white">
       <div className="bg-dark-card border-b border-dark-border px-6 py-3 flex items-center justify-between">
-        <h1 className="text-brand font-bold text-base">MathUz — Admin</h1>
+        <h1 className="text-brand font-bold text-base">MathModul — Admin</h1>
         <div className="flex gap-2">
           {([
             { key: "yechim", label: "✏️ Yechim yozish" },

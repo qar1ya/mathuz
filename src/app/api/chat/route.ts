@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SYSTEM = `Siz MathUz platformasining AI matematik o'qituvchisiz.
+const SYSTEM = `Siz MathModul platformasining AI matematik o'qituvchisiz.
 
 Qoidalar:
 - Har doim O'ZBEK tilida javob bering

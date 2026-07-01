@@ -34,7 +34,7 @@ function CheckoutModal({
   function handleConfirm() {
     // Telegram ga yo'naltirish
     const msg = encodeURIComponent(
-      `MathUz Premium to'lov\n` +
+      `MathModul Premium to'lov\n` +
       `Tarif: ${plan.name} (${plan.price} so'm)\n` +
       `Foydalanuvchi: ${user?.name ?? "?"} (${user?.id ?? "?"})\n` +
       `Telefon: ${phone}`
@@ -259,7 +259,7 @@ export default function PremiumPage() {
             <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20
               px-4 py-1.5 rounded-full mb-4">
               <Crown size={14} className="text-yellow-400" />
-              <span className="text-yellow-400 text-sm font-medium">MathUz Premium</span>
+              <span className="text-yellow-400 text-sm font-medium">MathModul Premium</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-white mb-3">DTMga mukammal tayyorlan</h1>
             <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-base">

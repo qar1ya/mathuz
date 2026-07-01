@@ -73,7 +73,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             M
           </div>
           <div>
-            <p className="text-white font-bold text-base leading-none">MathUz</p>
+            <p className="text-white font-bold text-base leading-none">MathModul</p>
             <p className="text-gray-600 text-[10px]">Ta&apos;lim platformasi</p>
           </div>
         </div>

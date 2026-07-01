@@ -12,7 +12,7 @@ function Navbar() {
       <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ background: "#7c3aed" }}>M</div>
-          <span className="font-black text-base" style={{ color: "#0f0f0f" }}>MathUz</span>
+          <span className="font-black text-base" style={{ color: "#0f0f0f" }}>MathModul</span>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm" style={{ color: "#6b7280" }}>
           <a href="#features" className="hover:text-gray-900 transition-colors">Imkoniyatlar</a>
@@ -114,7 +114,7 @@ export default function LandingPage() {
           <div className="relative flex justify-center">
             <div className="w-64 h-64 rounded-3xl flex items-center justify-center relative" style={{ background: "#f5f3ff" }}>
               <div className="absolute inset-0 rounded-3xl opacity-50" style={{ background: "radial-gradient(circle, rgba(124,58,237,.12) 0%, transparent 70%)" }} />
-              <img src="/cat.png" alt="MathUz mascot"
+              <img src="/cat.png" alt="MathModul mascot"
                 className="w-52 h-52 object-contain relative z-10"
                 style={{ filter: "drop-shadow(0 16px 32px rgba(124,58,237,.25))" }} />
             </div>
@@ -265,7 +265,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md flex items-center justify-center text-white font-bold text-xs" style={{ background: "#7c3aed" }}>M</div>
-            <span className="font-bold text-sm" style={{ color: "#0f0f0f" }}>MathUz</span>
+            <span className="font-bold text-sm" style={{ color: "#0f0f0f" }}>MathModul</span>
             <span className="text-xs ml-2" style={{ color: "#9ca3af" }}>© 2026. Barcha huquqlar himoyalangan.</span>
           </div>
           <div className="flex items-center gap-5 text-xs" style={{ color: "#9ca3af" }}>

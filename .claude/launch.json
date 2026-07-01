@@ -2,10 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "MathUz Dev Server",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "name": "mathuz-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Program Files\\nodejs;%PATH% && \"C:\\Program Files\\nodejs\\node.exe\" node_modules\\next\\dist\\bin\\next dev"],
+      "port": 3001,
+      "autoPort": true,
+      "cwd": "C:\\Users\\dias_n1\\OneDrive\\Desktop\\2019\\mathuz"
     }
   ]
 }

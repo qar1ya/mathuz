@@ -4,7 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "MathUz",
+  title: "MathModul",
   description: "DTM va Milliy Sertifikat uchun math platforma",
 };
 
